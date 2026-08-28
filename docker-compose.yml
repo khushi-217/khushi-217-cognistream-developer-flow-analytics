@@ -16,7 +16,18 @@ services:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse
 
-    restart: unless-stopped
+  airflow:
+    build: .
+    container_name: cognistream-airflow
+
+    ports:
+      - "8080:8080"
+
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./:/opt/airflow/project
+
+    command: standalone
 
 volumes:
   clickhouse_data:

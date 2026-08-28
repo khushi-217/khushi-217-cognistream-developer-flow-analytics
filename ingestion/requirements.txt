@@ -1,3 +1,0 @@
-requests
-apache-airflow
-clickhouse-connect
