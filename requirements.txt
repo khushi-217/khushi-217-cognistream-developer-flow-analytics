@@ -1,0 +1,3 @@
+requests
+apache-airflow==3.3.0
+clickhouse-connect
