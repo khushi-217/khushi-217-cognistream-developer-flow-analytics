@@ -3,25 +3,35 @@ import "./App.css";
 
 function App() {
   const [events, setEvents] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/events")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch events");
+    const loadDashboard = async () => {
+      try {
+        const [eventsResponse, analyticsResponse] = await Promise.all([
+          fetch("http://localhost:8000/api/events"),
+          fetch("http://localhost:8000/api/analytics/summary"),
+        ]);
+
+        if (!eventsResponse.ok || !analyticsResponse.ok) {
+          throw new Error("Failed to fetch dashboard data");
         }
-        return response.json();
-      })
-      .then((data) => {
-        setEvents(data);
-        setLoading(false);
-      })
-      .catch((err) => {
+
+        const eventsData = await eventsResponse.json();
+        const analyticsData = await analyticsResponse.json();
+
+        setEvents(eventsData);
+        setAnalytics(analyticsData);
+      } catch (err) {
         setError(err.message);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    loadDashboard();
   }, []);
 
   const sourceCounts = useMemo(() => {
@@ -31,11 +41,24 @@ function App() {
     }, {});
   }, [events]);
 
-  const contextSwitches = events.filter(
-    (event) =>
+  const getFlowStatus = (value) => {
+    if (value >= 70) return "Excellent";
+    if (value >= 50) return "Good";
+    return "Needs attention";
+  };
+
+  const getCognitiveStatus = (value) => {
+    if (value <= 40) return "Healthy";
+    if (value <= 60) return "Moderate";
+    return "High";
+  };
+
+  const isContextSwitch = (event) => {
+    return (
       event.event_type === "message" ||
       event.event_type === "ticket_update"
-  ).length;
+    );
+  };
 
   return (
     <div className="app">
@@ -92,38 +115,74 @@ function App() {
             </p>
           </section>
 
-          {loading && <div className="info-box">Loading events...</div>}
+          {loading && (
+            <div className="info-box">
+              Loading analytics...
+            </div>
+          )}
 
-          {error && <div className="error-box">{error}</div>}
+          {error && (
+            <div className="error-box">
+              {error}
+            </div>
+          )}
 
-          {!loading && !error && (
+          {!loading && !error && analytics && (
             <>
               <section className="metrics-grid">
                 <div className="metric-card">
                   <span>Flow Score</span>
-                  <strong>82%</strong>
-                  <small className="positive">+8.4% compared with yesterday</small>
-                  <b>Excellent</b>
+
+                  <strong>{analytics.flow_score}%</strong>
+
+                  <small>
+                    Calculated from developer activity
+                  </small>
+
+                  <b>
+                    {getFlowStatus(analytics.flow_score)}
+                  </b>
                 </div>
 
                 <div className="metric-card">
                   <span>Cognitive Load</span>
-                  <strong>34%</strong>
-                  <small>Low cognitive pressure detected</small>
-                  <b>Healthy</b>
+
+                  <strong>{analytics.cognitive_load}%</strong>
+
+                  <small>
+                    Based on current developer events
+                  </small>
+
+                  <b>
+                    {getCognitiveStatus(analytics.cognitive_load)}
+                  </b>
                 </div>
 
                 <div className="metric-card">
                   <span>Context Switches</span>
-                  <strong>{contextSwitches}</strong>
-                  <small>During the current session</small>
-                  <b>Low</b>
+
+                  <strong>{analytics.context_switches}</strong>
+
+                  <small>
+                    During the current session
+                  </small>
+
+                  <b>
+                    {analytics.context_switches <= 2
+                      ? "Low"
+                      : "High"}
+                  </b>
                 </div>
 
                 <div className="metric-card">
-                  <span>Productive Time</span>
-                  <strong>3h 42m</strong>
-                  <small>82% of tracked work session</small>
+                  <span>Productive Events</span>
+
+                  <strong>{analytics.productive_events}</strong>
+
+                  <small>
+                    Productive developer activities
+                  </small>
+
                   <b>On track</b>
                 </div>
               </section>
@@ -137,6 +196,29 @@ function App() {
                     </div>
 
                     <span>Today</span>
+                  </div>
+
+                  <div className="flow-summary">
+                    <div>
+                      <span>Flow Score</span>
+                      <strong>
+                        {analytics.flow_score}%
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Cognitive Load</span>
+                      <strong>
+                        {analytics.cognitive_load}%
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Context Switches</span>
+                      <strong>
+                        {analytics.context_switches}
+                      </strong>
+                    </div>
                   </div>
 
                   <div className="chart">
@@ -162,16 +244,23 @@ function App() {
                       <p>Event Sources</p>
                     </div>
 
-                    <strong>{events.length}</strong>
+                    <strong>
+                      {analytics.total_events}
+                    </strong>
                   </div>
 
                   <div className="source-list">
-                    {Object.entries(sourceCounts).map(([source, count]) => (
-                      <div className="source-row" key={source}>
-                        <span>{source}</span>
-                        <strong>{count}</strong>
-                      </div>
-                    ))}
+                    {Object.entries(sourceCounts).map(
+                      ([source, count]) => (
+                        <div
+                          className="source-row"
+                          key={source}
+                        >
+                          <span>{source}</span>
+                          <strong>{count}</strong>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               </section>
@@ -181,17 +270,25 @@ function App() {
                   <div className="panel-header">
                     <div>
                       <h3>Events by Source</h3>
-                      <p>{events.length} processed</p>
+
+                      <p>
+                        {analytics.total_events} processed
+                      </p>
                     </div>
                   </div>
 
                   <div className="source-cards">
-                    {Object.entries(sourceCounts).map(([source, count]) => (
-                      <div className="source-card" key={source}>
-                        <strong>{count}</strong>
-                        <span>{source}</span>
-                      </div>
-                    ))}
+                    {Object.entries(sourceCounts).map(
+                      ([source, count]) => (
+                        <div
+                          className="source-card"
+                          key={source}
+                        >
+                          <strong>{count}</strong>
+                          <span>{source}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -202,27 +299,39 @@ function App() {
                       <p>Session Health</p>
                     </div>
 
-                    <b>Healthy</b>
+                    <b>
+                      {analytics.cognitive_load <= 40
+                        ? "Healthy"
+                        : "Needs attention"}
+                    </b>
                   </div>
 
                   <div className="indicator">
                     <span>Focus time</span>
-                    <strong>82%</strong>
+                    <strong>
+                      {analytics.focus_time_percent}%
+                    </strong>
                   </div>
 
                   <div className="indicator">
                     <span>Deep work</span>
-                    <strong>74%</strong>
+                    <strong>
+                      {analytics.deep_work_percent}%
+                    </strong>
                   </div>
 
                   <div className="indicator">
                     <span>Communication load</span>
-                    <strong>31%</strong>
+                    <strong>
+                      {analytics.communication_load_percent}%
+                    </strong>
                   </div>
 
                   <div className="indicator">
                     <span>Cognitive load</span>
-                    <strong>34%</strong>
+                    <strong>
+                      {analytics.cognitive_load}%
+                    </strong>
                   </div>
                 </div>
               </section>
@@ -234,7 +343,9 @@ function App() {
                     <p>Recent Developer Events</p>
                   </div>
 
-                  <strong>{events.length} events</strong>
+                  <strong>
+                    {events.length} events
+                  </strong>
                 </div>
 
                 <div className="events-table">
@@ -245,43 +356,60 @@ function App() {
                     <span>STATUS</span>
                   </div>
 
-                  {events.map((event) => (
-                    <div className="table-row" key={`${event.timestamp}-${event.source}`}>
-                      <span>
-                        {new Date(event.timestamp).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: false,
-                        })}
-                      </span>
+                  {events.map((event) => {
+                    const contextSwitch =
+                      isContextSwitch(event);
 
-                      <span>{event.source}</span>
-
-                      <span>{event.event_type}</span>
-
-                      <span
-                        className={
-                          event.event_type === "message" ||
-                          event.event_type === "ticket_update"
-                            ? "context"
-                            : "focused"
+                    return (
+                      <div
+                        className="table-row"
+                        key={
+                          event.timestamp +
+                          "-" +
+                          event.source
                         }
                       >
-                        {event.event_type === "message" ||
-                        event.event_type === "ticket_update"
-                          ? "Context switch"
-                          : "Focused"}
-                      </span>
-                    </div>
-                  ))}
+                        <span>
+                          {new Date(
+                            event.timestamp
+                          ).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
+                          })}
+                        </span>
+
+                        <span>{event.source}</span>
+
+                        <span>{event.event_type}</span>
+
+                        <span
+                          className={
+                            contextSwitch
+                              ? "context"
+                              : "focused"
+                          }
+                        >
+                          {contextSwitch
+                            ? "Context switch"
+                            : "Focused"}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             </>
           )}
 
           <footer>
-            CogniStream • Developer Flow & Cognitive Load Analytics
-            <span>Pipeline: Python → Polars → ClickHouse → FastAPI → React</span>
+            <span>
+              CogniStream • Developer Flow & Cognitive Load Analytics
+            </span>
+
+            <span>
+              Pipeline: Python → Polars → ClickHouse → FastAPI → React
+            </span>
           </footer>
         </main>
       </div>
