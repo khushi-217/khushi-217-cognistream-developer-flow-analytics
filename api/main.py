@@ -1,4 +1,3 @@
-
 from collections import Counter
 
 from fastapi import FastAPI
@@ -22,7 +21,6 @@ app = FastAPI(
 # CORS CONFIGURATION
 # ============================================================
 
-# Allow the React/Vite frontend to communicate with FastAPI.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -84,9 +82,7 @@ def fetch_events():
 
 @app.get("/")
 def root():
-    """
-    Basic API health check.
-    """
+    """Basic API health check."""
 
     return {
         "message": "CogniStream API is running",
@@ -100,9 +96,7 @@ def root():
 
 @app.get("/api/events")
 def get_events():
-    """
-    Return all developer events.
-    """
+    """Return all developer events."""
 
     return fetch_events()
 
@@ -115,25 +109,9 @@ def get_events():
 def get_analytics_summary():
     """
     Calculate developer productivity and cognitive-load metrics.
-
-    Metrics:
-        - Total events
-        - Context switches
-        - Coding events
-        - Communication events
-        - Productive events
-        - Flow score
-        - Cognitive load
-        - Focus time percentage
-        - Deep work percentage
-        - Communication load percentage
     """
 
     events = fetch_events()
-
-    # --------------------------------------------------------
-    # EMPTY DATASET
-    # --------------------------------------------------------
 
     if not events:
         return {
@@ -149,78 +127,47 @@ def get_analytics_summary():
             "communication_load_percent": 0,
         }
 
-    # --------------------------------------------------------
-    # EVENT SOURCE COUNTS
-    # --------------------------------------------------------
-
     source_counts = Counter(
         event["source"]
         for event in events
     )
 
-    # --------------------------------------------------------
-    # EVENT TYPE COUNTS
-    # --------------------------------------------------------
-
-    event_type_counts = Counter(
-        event["event_type"]
-        for event in events
-    )
-
-    # --------------------------------------------------------
-    # CLASSIFICATION RULES
-    # --------------------------------------------------------
-
-    # Sources that represent interruption/context switching.
     context_switch_sources = {
         "Slack",
         "Jira",
     }
 
-    # Event types considered productive/deep-work activity.
     productive_event_types = {
         "coding",
         "coding_start",
         "commit",
     }
 
-    # --------------------------------------------------------
-    # BASIC METRICS
-    # --------------------------------------------------------
-
     total_events = len(events)
 
-    # Context switching
     context_switches = sum(
         1
         for event in events
         if event["source"] in context_switch_sources
     )
 
-    # Coding activity
     coding_events = sum(
         1
         for event in events
         if event["source"] == "VSCode"
     )
 
-    # Communication activity
     communication_events = sum(
         1
         for event in events
         if event["source"] == "Slack"
     )
 
-    # Productive activity
     productive_events = sum(
         1
         for event in events
         if event["event_type"] in productive_event_types
     )
-
-    # --------------------------------------------------------
-    # PERCENTAGE METRICS
-    # --------------------------------------------------------
 
     focus_time_percent = round(
         (coding_events / total_events) * 100
@@ -234,31 +181,12 @@ def get_analytics_summary():
         (communication_events / total_events) * 100
     )
 
-    # --------------------------------------------------------
-    # COGNITIVE LOAD
-    # --------------------------------------------------------
-    #
-    # Cognitive load is currently estimated from the
-    # proportion of context-switch events.
-    #
-    # Example:
-    # 2 context switches / 5 total events = 40%
-    #
-
     cognitive_load = min(
         100,
         round(
             (context_switches / total_events) * 100
         ),
     )
-
-    # --------------------------------------------------------
-    # FLOW SCORE
-    # --------------------------------------------------------
-    #
-    # Higher focus + deep work increases the score.
-    # Higher cognitive load decreases the score.
-    #
 
     flow_score = max(
         0,
@@ -274,10 +202,6 @@ def get_analytics_summary():
             ),
         ),
     )
-
-    # --------------------------------------------------------
-    # RETURN ANALYTICS
-    # --------------------------------------------------------
 
     return {
         "total_events": total_events,
@@ -299,18 +223,7 @@ def get_analytics_summary():
 
 @app.get("/api/analytics/activity")
 def get_activity():
-    """
-    Return event counts grouped by source.
-
-    Example response:
-
-    [
-        {"source": "VSCode", "count": 2},
-        {"source": "Slack", "count": 1},
-        {"source": "GitHub", "count": 1},
-        {"source": "Jira", "count": 1}
-    ]
-    """
+    """Return event counts grouped by source."""
 
     events = fetch_events()
 
@@ -334,9 +247,7 @@ def get_activity():
 
 @app.get("/api/analytics/event-types")
 def get_event_types():
-    """
-    Return event counts grouped by event type.
-    """
+    """Return event counts grouped by event type."""
 
     events = fetch_events()
 
@@ -360,9 +271,7 @@ def get_event_types():
 
 @app.get("/api/analytics/sources")
 def get_source_summary():
-    """
-    Return detailed source-level activity statistics.
-    """
+    """Return detailed source-level activity statistics."""
 
     events = fetch_events()
 
@@ -394,15 +303,10 @@ def get_source_summary():
 
 @app.get("/api/analytics/recent")
 def get_recent_events():
-    """
-    Return the most recent developer events.
-
-    The frontend can use this endpoint for a live activity stream.
-    """
+    """Return the most recent developer events."""
 
     events = fetch_events()
 
-    # Return newest events first.
     events = sorted(
         events,
         key=lambda event: event["timestamp"],

@@ -1,26 +1,17 @@
-import json
-from pathlib import Path
-
 from ingestion.clickhouse_client import (
     create_events_table,
     get_clickhouse_client,
     insert_events,
 )
-
-
-INPUT_FILE = (
-    Path(__file__).resolve().parent.parent
-    / "data"
-    / "processed"
-    / "events_normalized.json"
-)
+from ingestion.polars_cleaner import clean_events_with_polars
 
 
 def load_events_to_clickhouse():
-    """Load only new normalized events into ClickHouse."""
+    """Clean normalized events with Polars and load only new events into ClickHouse."""
 
-    with open(INPUT_FILE, "r", encoding="utf-8") as file:
-        events = json.load(file)
+    cleaned_df = clean_events_with_polars()
+
+    events = cleaned_df.to_dicts()
 
     client = get_clickhouse_client()
 
@@ -48,7 +39,7 @@ def load_events_to_clickhouse():
         for event in events
         if (
             event["developer_id"],
-            event["timestamp"].replace("Z", ""),
+            event["timestamp"].strftime("%Y-%m-%dT%H:%M:%S"),
             event["source"],
             event["event_type"],
         )
@@ -57,7 +48,7 @@ def load_events_to_clickhouse():
 
     insert_events(client, new_events)
 
-    print(f"Total events in file: {len(events)}")
+    print(f"Total events after Polars cleaning: {len(events)}")
     print(f"New events loaded: {len(new_events)}")
 
 
