@@ -1,11 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-<<<<<<< HEAD
 const API_BASE_URL = "http://127.0.0.1:8001";
 
-=======
->>>>>>> origin/main
 function App() {
   const [events, setEvents] = useState([]);
   const [analytics, setAnalytics] = useState(null);
@@ -15,7 +12,6 @@ function App() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-<<<<<<< HEAD
         setLoading(true);
         setError("");
 
@@ -34,15 +30,6 @@ function App() {
           throw new Error(
             `Analytics API failed with status ${analyticsResponse.status}`
           );
-=======
-        const [eventsResponse, analyticsResponse] = await Promise.all([
-          fetch("http://localhost:8000/api/events"),
-          fetch("http://localhost:8000/api/analytics/summary"),
-        ]);
-
-        if (!eventsResponse.ok || !analyticsResponse.ok) {
-          throw new Error("Failed to fetch dashboard data");
->>>>>>> origin/main
         }
 
         const eventsData = await eventsResponse.json();
@@ -51,27 +38,20 @@ function App() {
         setEvents(eventsData);
         setAnalytics(analyticsData);
       } catch (err) {
-<<<<<<< HEAD
         console.error("Dashboard error:", err);
         setError(
           "Unable to connect to the CogniStream API. Make sure FastAPI is running on port 8001."
         );
-=======
-        setError(err.message);
->>>>>>> origin/main
       } finally {
         setLoading(false);
       }
     };
 
     loadDashboard();
-<<<<<<< HEAD
 
     const interval = setInterval(loadDashboard, 30000);
 
     return () => clearInterval(interval);
-=======
->>>>>>> origin/main
   }, []);
 
   const sourceCounts = useMemo(() => {
@@ -81,7 +61,6 @@ function App() {
     }, {});
   }, [events]);
 
-<<<<<<< HEAD
   const flowStatus = (score) => {
     if (score >= 70) return "Excellent";
     if (score >= 50) return "Good";
@@ -89,21 +68,11 @@ function App() {
   };
 
   const cognitiveStatus = (value) => {
-=======
-  const getFlowStatus = (value) => {
-    if (value >= 70) return "Excellent";
-    if (value >= 50) return "Good";
-    return "Needs attention";
-  };
-
-  const getCognitiveStatus = (value) => {
->>>>>>> origin/main
     if (value <= 40) return "Healthy";
     if (value <= 60) return "Moderate";
     return "High";
   };
 
-<<<<<<< HEAD
   const getEventStatus = (event) => {
     if (
       event.source === "Slack" ||
@@ -196,18 +165,10 @@ function App() {
       minute: "2-digit",
       hour12: false,
     });
-=======
-  const isContextSwitch = (event) => {
-    return (
-      event.event_type === "message" ||
-      event.event_type === "ticket_update"
-    );
->>>>>>> origin/main
   };
 
   return (
     <div className="app">
-<<<<<<< HEAD
       {/* SIDEBAR */}
       <aside className="sidebar">
         <div className="brand">
@@ -223,22 +184,22 @@ function App() {
           <p>WORKSPACE</p>
 
           <button className="nav-item active">
-            <span>◈</span>
+            <span>Γùê</span>
             Dashboard
           </button>
 
           <button className="nav-item">
-            <span>◉</span>
+            <span>Γùë</span>
             Developer Flow
           </button>
 
           <button className="nav-item">
-            <span>⌁</span>
+            <span>Γîü</span>
             Cognitive Load
           </button>
 
           <button className="nav-item">
-            <span>↔</span>
+            <span>Γåö</span>
             Context Switching
           </button>
         </div>
@@ -247,12 +208,12 @@ function App() {
           <p>DATA</p>
 
           <button className="nav-item">
-            <span>◫</span>
+            <span>Γù½</span>
             Events
           </button>
 
           <button className="nav-item">
-            <span>⚙</span>
+            <span>ΓÜÖ</span>
             Integrations
           </button>
         </div>
@@ -268,47 +229,10 @@ function App() {
           </div>
 
           <div className="developer-mini">
-=======
-      <header className="topbar">
-        <div>
-          <h1>CogniStream</h1>
-          <p>Developer Analytics</p>
-        </div>
-
-        <div className="pipeline-status">
-          <span className="status-dot"></span>
-          Pipeline Online
-          <small>All systems operational</small>
-        </div>
-      </header>
-
-      <div className="layout">
-        <aside className="sidebar">
-          <h3>WORKSPACE</h3>
-
-          <nav>
-            <a className="active">▦ Dashboard</a>
-            <a>◉ Developer Flow</a>
-            <a>⌁ Cognitive Load</a>
-            <a>↔ Context Switching</a>
-          </nav>
-
-          <h3>DATA</h3>
-
-          <nav>
-            <a>◫ Events</a>
-            <a>⚙ Integrations</a>
-          </nav>
-        </aside>
-
-        <main className="main-content">
-          <section className="developer-card">
->>>>>>> origin/main
             <div className="avatar">K</div>
 
             <div>
               <strong>DEV001</strong>
-<<<<<<< HEAD
               <small>Developer</small>
             </div>
           </div>
@@ -554,155 +478,6 @@ function App() {
 
                       <span>Events</span>
                     </div>
-=======
-              <span>Developer</span>
-            </div>
-          </section>
-
-          <section className="hero-section">
-            <p className="eyebrow">DEVELOPER WORKSPACE</p>
-
-            <h2>Flow-State Overview</h2>
-
-            <p className="description">
-              Monitor developer productivity, cognitive load and context
-              switching in real time.
-            </p>
-          </section>
-
-          {loading && (
-            <div className="info-box">
-              Loading analytics...
-            </div>
-          )}
-
-          {error && (
-            <div className="error-box">
-              {error}
-            </div>
-          )}
-
-          {!loading && !error && analytics && (
-            <>
-              <section className="metrics-grid">
-                <div className="metric-card">
-                  <span>Flow Score</span>
-
-                  <strong>{analytics.flow_score}%</strong>
-
-                  <small>
-                    Calculated from developer activity
-                  </small>
-
-                  <b>
-                    {getFlowStatus(analytics.flow_score)}
-                  </b>
-                </div>
-
-                <div className="metric-card">
-                  <span>Cognitive Load</span>
-
-                  <strong>{analytics.cognitive_load}%</strong>
-
-                  <small>
-                    Based on current developer events
-                  </small>
-
-                  <b>
-                    {getCognitiveStatus(analytics.cognitive_load)}
-                  </b>
-                </div>
-
-                <div className="metric-card">
-                  <span>Context Switches</span>
-
-                  <strong>{analytics.context_switches}</strong>
-
-                  <small>
-                    During the current session
-                  </small>
-
-                  <b>
-                    {analytics.context_switches <= 2
-                      ? "Low"
-                      : "High"}
-                  </b>
-                </div>
-
-                <div className="metric-card">
-                  <span>Productive Events</span>
-
-                  <strong>{analytics.productive_events}</strong>
-
-                  <small>
-                    Productive developer activities
-                  </small>
-
-                  <b>On track</b>
-                </div>
-              </section>
-
-              <section className="content-grid">
-                <div className="panel">
-                  <div className="panel-header">
-                    <div>
-                      <h3>Developer Flow</h3>
-                      <p>Flow & Cognitive Load</p>
-                    </div>
-
-                    <span>Today</span>
-                  </div>
-
-                  <div className="flow-summary">
-                    <div>
-                      <span>Flow Score</span>
-                      <strong>
-                        {analytics.flow_score}%
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>Cognitive Load</span>
-                      <strong>
-                        {analytics.cognitive_load}%
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>Context Switches</span>
-                      <strong>
-                        {analytics.context_switches}
-                      </strong>
-                    </div>
-                  </div>
-
-                  <div className="chart">
-                    <div className="chart-line"></div>
-                    <div className="chart-line"></div>
-                    <div className="chart-line"></div>
-                    <div className="chart-line"></div>
-
-                    <div className="chart-labels">
-                      <span>09:00</span>
-                      <span>09:30</span>
-                      <span>10:00</span>
-                      <span>10:30</span>
-                      <span>11:00</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="panel">
-                  <div className="panel-header">
-                    <div>
-                      <h3>Activity Distribution</h3>
-                      <p>Event Sources</p>
-                    </div>
-
-                    <strong>
-                      {analytics.total_events}
-                    </strong>
->>>>>>> origin/main
                   </div>
 
                   <div className="source-list">
@@ -712,23 +487,18 @@ function App() {
                           className="source-row"
                           key={source}
                         >
-<<<<<<< HEAD
                           <span className="source-dot">
                             {source.charAt(0)}
                           </span>
 
                           <span>{source}</span>
 
-=======
-                          <span>{source}</span>
->>>>>>> origin/main
                           <strong>{count}</strong>
                         </div>
                       )
                     )}
                   </div>
                 </div>
-<<<<<<< HEAD
               </div>
 
               {/* EVENTS BY SOURCE */}
@@ -797,59 +567,11 @@ function App() {
                   <div className="indicator-top">
                     <span>Focus time</span>
 
-=======
-              </section>
-
-              <section className="content-grid">
-                <div className="panel">
-                  <div className="panel-header">
-                    <div>
-                      <h3>Events by Source</h3>
-
-                      <p>
-                        {analytics.total_events} processed
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="source-cards">
-                    {Object.entries(sourceCounts).map(
-                      ([source, count]) => (
-                        <div
-                          className="source-card"
-                          key={source}
-                        >
-                          <strong>{count}</strong>
-                          <span>{source}</span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                <div className="panel">
-                  <div className="panel-header">
-                    <div>
-                      <h3>Productivity Indicators</h3>
-                      <p>Session Health</p>
-                    </div>
-
-                    <b>
-                      {analytics.cognitive_load <= 40
-                        ? "Healthy"
-                        : "Needs attention"}
-                    </b>
-                  </div>
-
-                  <div className="indicator">
-                    <span>Focus time</span>
->>>>>>> origin/main
                     <strong>
                       {analytics.focus_time_percent}%
                     </strong>
                   </div>
 
-<<<<<<< HEAD
                   <div className="indicator-track">
                     <div
                       className="indicator-fill"
@@ -864,16 +586,11 @@ function App() {
                   <div className="indicator-top">
                     <span>Deep work</span>
 
-=======
-                  <div className="indicator">
-                    <span>Deep work</span>
->>>>>>> origin/main
                     <strong>
                       {analytics.deep_work_percent}%
                     </strong>
                   </div>
 
-<<<<<<< HEAD
                   <div className="indicator-track">
                     <div
                       className="indicator-fill"
@@ -910,22 +627,10 @@ function App() {
                   <div className="indicator-top">
                     <span>Cognitive load</span>
 
-=======
-                  <div className="indicator">
-                    <span>Communication load</span>
-                    <strong>
-                      {analytics.communication_load_percent}%
-                    </strong>
-                  </div>
-
-                  <div className="indicator">
-                    <span>Cognitive load</span>
->>>>>>> origin/main
                     <strong>
                       {analytics.cognitive_load}%
                     </strong>
                   </div>
-<<<<<<< HEAD
 
                   <div className="indicator-track">
                     <div
@@ -1002,98 +707,16 @@ function App() {
 
         <footer>
           <span>
-            CogniStream • Developer Flow & Cognitive
+            CogniStream ΓÇó Developer Flow & Cognitive
             Load Analytics
           </span>
 
           <span>
-            Pipeline: Python → Polars → ClickHouse →
-            FastAPI → React
+            Pipeline: Python ΓåÆ Polars ΓåÆ ClickHouse ΓåÆ
+            FastAPI ΓåÆ React
           </span>
         </footer>
       </main>
-=======
-                </div>
-              </section>
-
-              <section className="panel events-panel">
-                <div className="panel-header">
-                  <div>
-                    <h3>Live Activity</h3>
-                    <p>Recent Developer Events</p>
-                  </div>
-
-                  <strong>
-                    {events.length} events
-                  </strong>
-                </div>
-
-                <div className="events-table">
-                  <div className="table-header">
-                    <span>TIME</span>
-                    <span>SOURCE</span>
-                    <span>EVENT</span>
-                    <span>STATUS</span>
-                  </div>
-
-                  {events.map((event) => {
-                    const contextSwitch =
-                      isContextSwitch(event);
-
-                    return (
-                      <div
-                        className="table-row"
-                        key={
-                          event.timestamp +
-                          "-" +
-                          event.source
-                        }
-                      >
-                        <span>
-                          {new Date(
-                            event.timestamp
-                          ).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            hour12: false,
-                          })}
-                        </span>
-
-                        <span>{event.source}</span>
-
-                        <span>{event.event_type}</span>
-
-                        <span
-                          className={
-                            contextSwitch
-                              ? "context"
-                              : "focused"
-                          }
-                        >
-                          {contextSwitch
-                            ? "Context switch"
-                            : "Focused"}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            </>
-          )}
-
-          <footer>
-            <span>
-              CogniStream • Developer Flow & Cognitive Load Analytics
-            </span>
-
-            <span>
-              Pipeline: Python → Polars → ClickHouse → FastAPI → React
-            </span>
-          </footer>
-        </main>
-      </div>
->>>>>>> origin/main
     </div>
   );
 }
