@@ -184,22 +184,22 @@ function App() {
           <p>WORKSPACE</p>
 
           <button className="nav-item active">
-            <span>Γùê</span>
+            <span>◈</span>
             Dashboard
           </button>
 
           <button className="nav-item">
-            <span>Γùë</span>
+            <span>◉</span>
             Developer Flow
           </button>
 
           <button className="nav-item">
-            <span>Γîü</span>
+            <span>⌁</span>
             Cognitive Load
           </button>
 
           <button className="nav-item">
-            <span>Γåö</span>
+            <span>↔</span>
             Context Switching
           </button>
         </div>
@@ -208,12 +208,12 @@ function App() {
           <p>DATA</p>
 
           <button className="nav-item">
-            <span>Γù½</span>
+            <span>◫</span>
             Events
           </button>
 
           <button className="nav-item">
-            <span>ΓÜÖ</span>
+            <span>⚙</span>
             Integrations
           </button>
         </div>
@@ -707,13 +707,13 @@ function App() {
 
         <footer>
           <span>
-            CogniStream ΓÇó Developer Flow & Cognitive
+            CogniStream • Developer Flow & Cognitive
             Load Analytics
           </span>
 
           <span>
-            Pipeline: Python ΓåÆ Polars ΓåÆ ClickHouse ΓåÆ
-            FastAPI ΓåÆ React
+            Pipeline: Python → Polars → ClickHouse →
+            FastAPI → React
           </span>
         </footer>
       </main>
