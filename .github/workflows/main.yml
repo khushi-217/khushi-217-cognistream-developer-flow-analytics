@@ -51,5 +51,18 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Start ClickHouse
+        run: docker compose up -d clickhouse
+
+      - name: Wait for ClickHouse
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8123/ping | grep -q "Ok"; then
+              echo "ClickHouse is ready"
+              break
+            fi
+            sleep 2
+          done
+
       - name: Run tests
         run: pytest
