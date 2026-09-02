@@ -1,3 +1,4 @@
+
 name: CI
 
 on:
@@ -38,6 +39,13 @@ jobs:
 
   python:
     runs-on: ubuntu-latest
+
+    env:
+      CLICKHOUSE_HOST: localhost
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_USER: cognistream
+      CLICKHOUSE_PASSWORD: cognistream_dev
+      CLICKHOUSE_DB: cognistream
 
     steps:
       - name: Checkout repository
