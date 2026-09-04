@@ -1,213 +1,493 @@
 CogniStream 🚀
+🎯 Problem Statement
 
-Developer Flow-State & Cognitive Load Analytics Platform
+Developers continuously switch between coding, communication, task management, and version-control activities.
 
-CogniStream is a developer analytics platform designed to collect, normalize, process, and analyze developer activity from multiple sources such as GitHub, Jira, Slack, and IDEs.
+These frequent transitions can interrupt focused work and increase cognitive load.
 
-The platform aims to transform raw developer activity into meaningful insights related to developer flow state, productivity patterns, activity trends, and cognitive load.
+CogniStream analyzes these activities to identify:
 
----
-
-🎯 Project Overview
-
-CogniStream collects developer event data from multiple development tools and processes it through a unified data ingestion pipeline.
-
-Supported Sources
-
-- 🐙 GitHub
-- 📋 Jira
-- 💬 Slack
-- 💻 IDEs
-
-The collected events are extracted using Python, orchestrated through Apache Airflow, normalized into a unified event format, validated, and prepared for downstream analytics.
-
----
+Developer flow-state
+Context switching
+Coding activity
+Productive events
+Communication load
+Focus time
+Deep-work periods
+Cognitive load
 
 🏗️ System Architecture
 
 GitHub ─────┐
-Jira ───────┤
-Slack ──────┼──→ Python Extraction Scripts
-IDE ────────┘
-                    ↓
-              Apache Airflow
-                    ↓
-             Unified Ingestion
-                    ↓
-             Event Normalization
-                    ↓
-              Data Validation
-                    ↓
-        Analytics / Data Processing
-                    ↓
-              ClickHouse
-                    ↓
-          React + Tremor.js Dashboard
+Slack ──────┤
+IDE ────────┼──► Python Extraction
+Jira ───────┘          │
+                       ▼
+                Apache Airflow
+                       │
+                       ▼
+             Unified Event Ingestion
+                       │
+                       ▼
+              Event Normalization
+                       │
+                       ▼
+                Data Validation
+                       │
+                       ▼
+              Polars Processing
+                       │
+                       ▼
+                 ClickHouse
+                       │
+                       ▼
+                   FastAPI
+                       │
+                       ▼
+              React + Tremor.js
+                  Dashboard
+🛠️ Technology             Stack
+Component	             Technology
+Data Extraction	        Python
+Workflow Orchestration	  Apache Airflow
+Data Processing	        Polars
+Database	              ClickHouse
+Backend API	              FastAPI
+Frontend	              React
+Visualization	        Tremor.js
+Containerization	         Docker
+CI/CD	                    GitHub Actions
+Version Control	        Git & GitHub
 
----
 
-🛠️ Technology Stack
+📌 Week 1 – API Ingestion & Pipeline
+Completed
 
-Component| Technology
-Data Extraction| Python
-Data Processing| Python, Polars
-Workflow Orchestration| Apache Airflow
-Analytics Database| ClickHouse
-Frontend| React
-Dashboard| Tremor.js
-Version Control| Git / GitHub
+Mock developer activity data
+GitHub, Slack, IDE and Jira extraction scripts
+Apache Airflow ingestion pipeline
+Daily ingestion DAG
+Unified event ingestion
+Event normalization
+Data validation
+Automated pipeline execution and testing
+Airflow DAG
+GitHub Extraction ─┐
+Slack Extraction ──┤
+IDE Extraction ────┼──► Unified Ingestion
+Jira Extraction ───┘          │
+                              ▼
+                     Normalize Events
+                              │
+                              ▼
+                       Validate Data
 
----
 
-📅 Week 1 – API Ingestion
 
-Completed Work
+📊 Week 2 – Data Engineering & Analytics
+Completed
 
-During Week 1, the initial API ingestion pipeline was implemented and validated.
+ClickHouse database integration
+developer_events event table
+Polars-based data cleaning and normalization
+Processed developer activity data
+Duplicate-safe event storage
+FastAPI analytics summary endpoint
+React dashboard connected with backend API
+Data Flow
+Raw Events
+    │
+    ▼
+Polars Cleaning
+    │
+    ▼
+Normalized Events
+    │
+    ▼
+ClickHouse
+    │
+    ▼
+FastAPI Analytics
+    │
+    ▼
+React Dashboard
 
-1. Repository & Project Setup
+🔄 Week 3 — Advanced Flow Analytics
+Focus
 
-- Created the CogniStream GitHub repository.
-- Created the initial project structure.
-- Established the Git workflow for development and collaboration.
+Week 3 extends the platform from basic activity metrics toward deeper developer-flow analysis.
 
-2. Mock Developer Event Data
+Planned / In Progress
+Uninterrupted Flow Block detection
+Identification of extended coding sessions
+Advanced context-switching analysis
+Advanced SQL and Polars analytics
+Analysis of interruptions and communication events
+Context-switching visualizations
+Flow-state insights based on developer activity patterns
 
-Created mock event data representing activity from:
 
-- GitHub
-- Slack
-- IDE
+Target Flow Analysis
 
-This data was used to test the ingestion and normalization pipeline before connecting to live data sources.
+Developer Events
+       │
+       ▼
+Time-Ordered Activity
+       │
+       ▼
+Activity Grouping
+       │
+       ├── Coding
+       ├── Communication
+       ├── Commits
+       └── Other Events
+       │
+       ▼
+Flow Block Detection
+       │
+       ▼
+Context-Switch Analysis
+       │
+       ▼
+Developer Flow Insights
 
-3. Python Extraction Scripts
+🔄 Week 4 — Final Analytics & Project Polish
+Focus
 
-Developed Python extraction scripts responsible for collecting source-specific developer events.
+Week 4 focuses on completing the analytics layer, improving the dashboard, validating the complete pipeline, and preparing the project for final presentation.
 
-The extraction layer is designed to provide a consistent input to the centralized ingestion workflow.
+Planned / In Progress
+Final flow-state analytics
+Advanced developer productivity insights
+Context-switching analysis refinement
+Dashboard improvements
+Final visualization and UX polish
+End-to-end pipeline validation
+Final testing
+Documentation cleanup
+Final project review
 
-4. Apache Airflow DAG
 
-Created an Apache Airflow DAG to orchestrate the ingestion workflow.
+Final Project Flow
+Data Sources
+     │
+     ▼
+Extraction
+     │
+     ▼
+Airflow
+     │
+     ▼
+Normalization & Validation
+     │
+     ▼
+Polars
+     │
+     ▼
+ClickHouse
+     │
+     ▼
+Advanced Analytics
+     │
+     ▼
+FastAPI
+     │
+     ▼
+React + Tremor Dashboard
 
-The DAG manages the sequence of:
 
-1. Event extraction
-2. Unified ingestion
-3. Event normalization
-4. Data validation
+📊 Developer Analytics
 
-The DAG was also configured for daily automated execution.
+CogniStream provides analytics such as:
+ 
+Metric	               Description
+Flow Score	             Overall developer flow level
+Cognitive Load	       Estimated cognitive workload from activity
+Context Switches	       Detected transitions between different activity types
+Productive Events	       Productive developer actions
+Focus Time	             Percentage of focused activity
+Deep Work	             Percentage of deeper uninterrupted activity
+Communication Load	 Communication-related activity
+Activity Distribution	 Activity grouped by source
+Events by Source	       GitHub, Slack, IDE, and Jira activity
+Session Health	       Overall session condition
+Recent Activity	       Latest developer events
 
-5. Event Normalization
+🚀 Dashboard
 
-Implemented and tested the normalization process to convert source-specific events into a unified developer-event structure.
+The React + Tremor dashboard provides an interactive overview of developer activity.
 
-This allows events from different platforms to be processed consistently.
+Dashboard Components
+                 Developer Analytics
+                         │
+        ┌────────────────┼────────────────┐
+        ▼                ▼                ▼
+   Flow Score      Cognitive Load    Context Switches
+        │                │                │
+        └────────────────┼────────────────┘
+                         ▼
+                 Activity Analytics
+                         │
+        ┌────────────────┼────────────────┐
+        ▼                ▼                ▼
+ Activity Distribution  Events by Source  Session Health
+                         │
+                         ▼
+                   Live Activity
 
-6. Data Validation
+Current Dashboard Metrics
 
-Added validation checks to verify that the ingested developer events are processed correctly and meet the expected structure.
+The dashboard is connected to the FastAPI backend and displays metrics generated from the processed event data.
 
----
+🔌 FastAPI Backend
 
-🔄 Ingestion Workflow
+The backend exposes analytics through:
 
-GitHub / Slack / IDE / Jira
-            ↓
-Python Extraction Scripts
-            ↓
-      Apache Airflow DAG
-            ↓
-      Unified Ingestion
-            ↓
-    Event Normalization
-            ↓
-      Data Validation
+GET /api/analytics/summary
 
----
+Example response:
 
-✅ Week 1 Validation
+{
+  "total_events": 5,
+  "context_switches": 2,
+  "coding_events": 2,
+  "communication_events": 1,
+  "productive_events": 3,
+  "flow_score": 30,
+  "cognitive_load": 40,
+  "focus_time_percent": 40,
+  "deep_work_percent": 60,
+  "communication_load_percent": 20
+}
 
-The Week 1 ingestion pipeline was successfully tested through Apache Airflow.
+🗄️ ClickHouse
 
-Validation Results
+ClickHouse is used as the analytical event database.
 
-- ✅ Airflow DAG execution verified.
-- ✅ Airflow task logs reviewed.
-- ✅ Extraction tasks executed successfully.
-- ✅ Slack extraction completed with return code 0.
-- ✅ Event normalization processed the available developer events.
-- ✅ Data validation workflow verified.
-- ✅ Project Git working tree verified clean.
-- ✅ Final commit verified on "origin/main".
-- ✅ Final commit verified on "collab/main".
+Main Event Table
+cognistream.developer_events
 
----
+The table stores normalized developer activity including:
 
-📊 Current Status
+Developer ID
+Timestamp
+Source
+Event type
+Activity information
 
-Week 1 — API Ingestion
+Example sources:
 
-Status: ✅ Completed
+VSCode
+Slack
+GitHub
+Jira
+🐻 Polars Data Processing
 
-The initial ingestion pipeline has been implemented, orchestrated through Airflow, and validated successfully.
+Polars is used to clean, normalize, and transform extracted event data before analytical storage.
 
-The project is now ready for the next stage of development involving expanded data processing, analytics, storage, and dashboard capabilities.
+Raw JSON Events
+       │
+       ▼
+Polars
+       │
+       ├── Cleaning
+       ├── Normalization
+       ├── Transformation
+       └── Validation
+       │
+       ▼
+Processed Events
+       │
+       ▼
+ClickHouse
 
----
+🌬️ Apache Airflow
 
-📁 Project Structure
+The main ingestion DAG is:
 
+cognistream_daily_ingestion
+DAG Tasks
+github_extraction
+        │
+slack_extraction
+        │
+ide_extraction
+        │
+jira_extraction
+        │
+        ▼
+unified_ingestion
+        │
+        ▼
+normalize_events
+        │
+        ▼
+validate_data
+
+Airflow is responsible for orchestrating the daily ingestion and processing workflow.
+
+🐳 Docker
+
+Docker Compose provides reproducible project infrastructure.
+
+Services
+Docker Compose
+      │
+      ├── ClickHouse
+      │
+      └── Apache Airflow
+Start ClickHouse
+docker compose up -d clickhouse
+Start the complete Docker environment
+docker compose up -d
+
+
+🧪 Testing
+
+The project includes automated tests covering:
+
+Data ingestion
+Polars processing
+ClickHouse integration
+
+Run tests with:
+
+pytest
+
+The project also verifies the frontend through:
+
+npm run lint
+npm run build
+
+⚙️ CI/CD
+
+GitHub Actions is configured to validate both the frontend and Python components.
+
+                    GitHub Actions
+                          │
+             ┌────────────┴────────────┐
+             ▼                         ▼
+         Frontend                    Python
+             │                         │
+        npm ci                    Install deps
+             │                         │
+          Lint                    ClickHouse
+             │                         │
+          Build                     pytest
+CI Pipeline
+Frontend dependency installation
+Frontend linting
+Frontend production build
+Python dependency installation
+ClickHouse service startup
+Automated pytest execution
+
+📸 Project Evidence
+
+Implementation evidence is maintained in:
+
+screenshots/
+└── mid-review/
+Mid-Review Evidence
+Evidence	File
+Airflow successful DAG execution	airflow sucess screenshot.png
+Raw event data	raw-events.png
+Polars normalized data	polars-normalized.png
+ClickHouse developer events	clickhouse-developer-events.png
+FastAPI analytics response	fastapi-summary.png
+React dashboard	Dashboard.png
+
+
+📂 Project Structure
 CogniStream/
 │
-├── airflow/
-│   └── dags/
+├── .github/
+│   └── workflows/
+│       └── main.yml
 │
-├── extraction/
-│   ├── github/
-│   ├── slack/
-│   ├── ide/
-│   └── jira/
+├── api/
+│   └── main.py
 │
-├── data/
-│   └── mock/
+├── dags/
+│   └── cognistream_ingestion_dag.py
 │
-├── processing/
+├── ingestion/
+│   ├── __init__.py
+│   ├── clickhouse_client.py
+│   ├── load_to_clickhouse.py
+│   └── polars_cleaner.py
 │
-├── dashboard/
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── public/
+│   ├── package.json
+│   ├── package-lock.json
+│   └── vite.config.js
 │
 ├── tests/
+│   ├── test_clickhouse.py
+│   └── test_polars.py
 │
-├── README.md
-└── requirements.txt
+├── github_api.py
+├── slack_api.py
+├── ide_activity.py
+├── event_ingestion.py
+├── test_ingestion.py
+├── events.json
+├── events_normalized.json
+├── docker-compose.yml
+├── Dockerfile
+├── Dockerfile.txt
+├── requirements.txt
+└── README.md
+▶️ How to Run
+1. Start ClickHouse
+docker compose up -d clickhouse
+2. Start FastAPI
 
----
+From the project root:
 
-🔮 Roadmap
+uvicorn api.main:app --reload --port 8001
+3. Start Frontend
+cd frontend
+npm install
+npm run dev
 
-- [x] Project repository setup
-- [x] Mock developer event generation
-- [x] Python extraction scripts
-- [x] Apache Airflow ingestion DAG
-- [x] Daily DAG scheduling
-- [x] Event normalization
-- [x] Data validation
-- [x] Week 1 pipeline validation
-- [ ] Expand source integrations
-- [ ] Implement Polars-based data processing
-- [ ] Store processed events in ClickHouse
-- [ ] Develop analytics layer
-- [ ] Build React dashboard
-- [ ] Add Tremor.js visualizations
-- [ ] Develop developer flow-state insights
-- [ ] Develop cognitive-load analytics
+The frontend can then be accessed through the Vite development server.
 
----
+📍 Project Status
+Component	Status
+API Ingestion	✅ Completed
+Airflow Pipeline	✅ Completed
+Event Normalization	✅ Completed
+Data Validation	✅ Completed
+Polars Processing	✅ Completed
+ClickHouse Storage	✅ Completed
+FastAPI Analytics	✅ Completed
+React Dashboard	✅ Completed
+Docker Infrastructure	✅ Completed
+CI/CD	✅ Configured
+Advanced Flow Analytics	🔄 In Progress
+Context-Switching Analytics	🔄 In Progress
+Final Dashboard Polish	⏳ Week 4
+Final End-to-End Validation	⏳ Week 4
+🎯 Project Goal
 
-📌 Project Goal
+CogniStream brings together:
 
-CogniStream aims to provide developers and engineering teams with actionable insights into development workflows by combining activity data from the tools developers use every day.
+Data Ingestion → Orchestration → Processing → Storage → Analytics → Visualization
 
-The long-term goal is to move beyond simple activity metrics and provide meaningful analytics around flow state, cognitive load, development patterns, and engineering productivity.
+to provide a data-driven understanding of developer productivity, flow-state, context switching, and cognitive load.
+
+👩‍💻 Author
+
+Khushi Rawat
+
+B.Tech Computer Science Engineering
+
+GitHub: khushi-217
+
