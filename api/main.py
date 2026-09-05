@@ -295,6 +295,41 @@ def get_source_summary():
         }
         for source, count in source_counts.items()
     ]
+# ============================================================
+# CONTEXT SWITCHING ANALYTICS
+# ============================================================
+
+@app.get("/api/analytics/context-switches")
+def get_context_switches():
+    """Return detailed context switches caused by Slack or Jira interruptions."""
+
+    events = fetch_events()
+
+    interruption_sources = {
+        "Slack",
+        "Jira",
+    }
+
+    switches = []
+
+    for index in range(1, len(events)):
+        previous_event = events[index - 1]
+        current_event = events[index]
+
+        if (
+            current_event["source"] in interruption_sources
+            and previous_event["source"] != current_event["source"]
+        ):
+            switches.append(
+                {
+                    "developer_id": current_event["developer_id"],
+                    "timestamp": current_event["timestamp"],
+                    "from_source": previous_event["source"],
+                    "to_source": current_event["source"],
+                }
+            )
+
+    return switches
 
 
 # ============================================================
