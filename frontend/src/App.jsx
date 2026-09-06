@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { BarChart } from "@tremor/react";
 import "./App.css";
 
 const API_BASE_URL = "http://127.0.0.1:8001";
@@ -6,6 +7,7 @@ const API_BASE_URL = "http://127.0.0.1:8001";
 function App() {
   const [events, setEvents] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const [contextSwitches, setContextSwitches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -37,6 +39,34 @@ function App() {
 
         setEvents(eventsData);
         setAnalytics(analyticsData);
+
+        // Context-switch analytics are loaded separately so that
+        // an issue with this endpoint does not break the main dashboard.
+        try {
+          const contextSwitchResponse = await fetch(
+            `${API_BASE_URL}/api/analytics/context-switches`
+          );
+
+          if (!contextSwitchResponse.ok) {
+            throw new Error(
+              `Context switch API failed with status ${contextSwitchResponse.status}`
+            );
+          }
+
+          const contextSwitchData = await contextSwitchResponse.json();
+
+          if (!Array.isArray(contextSwitchData)) {
+            throw new Error("Context switch API returned invalid data");
+          }
+
+          setContextSwitches(contextSwitchData);
+        } catch (contextError) {
+          console.error(
+            "Context switching analytics error:",
+            contextError
+          );
+          setContextSwitches([]);
+        }
       } catch (err) {
         console.error("Dashboard error:", err);
         setError(
@@ -166,6 +196,14 @@ function App() {
       hour12: false,
     });
   };
+
+  const contextSwitchChartData = useMemo(() => {
+    return contextSwitches.map((switchEvent) => ({
+      time: formatTime(switchEvent.timestamp),
+      Slack: switchEvent.to_source === "Slack" ? 1 : 0,
+      Jira: switchEvent.to_source === "Jira" ? 1 : 0,
+    }));
+  }, [contextSwitches]);
 
   return (
     <div className="app">
@@ -418,6 +456,7 @@ function App() {
                           offset="0%"
                           stopOpacity="0.25"
                         />
+
                         <stop
                           offset="100%"
                           stopOpacity="0"
@@ -449,6 +488,69 @@ function App() {
                   </div>
                 </div>
               </div>
+            </section>
+
+            {/* CONTEXT SWITCHING */}
+            <section className="card context-switch-card">
+              <div className="card-header">
+                <div>
+                  <span className="section-label">
+                    CONTEXT SWITCHING
+                  </span>
+
+                  <h2>Interruption Sources</h2>
+                </div>
+
+                <span className="today-label">
+                  {contextSwitches.length} switches
+                </span>
+              </div>
+
+              {contextSwitches.length > 0 ? (
+                <>
+                  <BarChart
+                    data={contextSwitchChartData}
+                    index="time"
+                    categories={["Slack", "Jira"]}
+                    colors={["blue", "amber"]}
+                    yAxisWidth={40}
+                    showLegend={true}
+                    showGridLines={true}
+                    showAnimation={true}
+                    autoMinValue={0}
+                    valueFormatter={(value) => `${value}`}
+                  />
+
+                  <div className="context-switch-list">
+                    {contextSwitches.map((switchEvent) => (
+                      <div
+                        className="context-switch-row"
+                        key={`${switchEvent.timestamp}-${switchEvent.from_source}-${switchEvent.to_source}`}
+                      >
+                        <span className="time">
+                          {formatTime(
+                            switchEvent.timestamp
+                          )}
+                        </span>
+
+                        <span>
+                          {switchEvent.from_source}
+                        </span>
+
+                        <span>→</span>
+
+                        <strong>
+                          {switchEvent.to_source}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="empty-state">
+                  No context switches detected.
+                </div>
+              )}
             </section>
 
             {/* LOWER CARDS */}
@@ -517,9 +619,11 @@ function App() {
                   {Object.entries(sourceCounts).map(
                     ([source, count]) => {
                       const percentage =
-                        (count /
-                          analytics.total_events) *
-                        100;
+                        analytics.total_events > 0
+                          ? (count /
+                              analytics.total_events) *
+                            100
+                          : 0;
 
                       return (
                         <div
