@@ -8,6 +8,7 @@ function App() {
   const [events, setEvents] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [contextSwitches, setContextSwitches] = useState([]);
+  const [flowBlocks, setFlowBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -36,6 +37,10 @@ function App() {
 
         const eventsData = await eventsResponse.json();
         const analyticsData = await analyticsResponse.json();
+
+        if (!Array.isArray(eventsData)) {
+          throw new Error("Events API returned invalid data");
+        }
 
         setEvents(eventsData);
         setAnalytics(analyticsData);
@@ -66,6 +71,34 @@ function App() {
             contextError
           );
           setContextSwitches([]);
+        }
+
+        // Uninterrupted flow-block analytics are loaded separately
+        // so that an issue with this endpoint does not break the main dashboard.
+        try {
+          const flowBlockResponse = await fetch(
+            `${API_BASE_URL}/api/analytics/flow-blocks`
+          );
+
+          if (!flowBlockResponse.ok) {
+            throw new Error(
+              `Flow block API failed with status ${flowBlockResponse.status}`
+            );
+          }
+
+          const flowBlockData = await flowBlockResponse.json();
+
+          if (!Array.isArray(flowBlockData)) {
+            throw new Error("Flow block API returned invalid data");
+          }
+
+          setFlowBlocks(flowBlockData);
+        } catch (flowBlockError) {
+          console.error(
+            "Flow block analytics error:",
+            flowBlockError
+          );
+          setFlowBlocks([]);
         }
       } catch (err) {
         console.error("Dashboard error:", err);
@@ -152,7 +185,10 @@ function App() {
         score += 15;
       }
 
-      if (event.source === "Slack" || event.source === "Jira") {
+      if (
+        event.source === "Slack" ||
+        event.source === "Jira"
+      ) {
         score -= 25;
       }
 
@@ -173,7 +209,10 @@ function App() {
     const height = 170;
 
     if (flowPoints.length === 1) {
-      return `M 0 ${height - flowPoints[0].score * 1.5}`;
+      const y =
+        height - (flowPoints[0].score / 100) * height;
+
+      return `M 0 ${y}`;
     }
 
     return flowPoints
@@ -549,6 +588,52 @@ function App() {
               ) : (
                 <div className="empty-state">
                   No context switches detected.
+                </div>
+              )}
+            </section>
+
+            {/* UNINTERRUPTED FLOW BLOCKS */}
+            <section className="card flow-block-card">
+              <div className="card-header">
+                <div>
+                  <span className="section-label">
+                    DEEP WORK
+                  </span>
+
+                  <h2>Uninterrupted Flow Blocks</h2>
+                </div>
+
+                <span className="today-label">
+                  {flowBlocks.length} blocks
+                </span>
+              </div>
+
+              {flowBlocks.length > 0 ? (
+                <div className="context-switch-list">
+                  {flowBlocks.map((block) => (
+                    <div
+                      className="context-switch-row"
+                      key={`${block.developer_id}-${block.start_time}-${block.end_time}`}
+                    >
+                      <span className="time">
+                        {formatTime(block.start_time)}
+                      </span>
+
+                      <span>
+                        {formatTime(block.end_time)}
+                      </span>
+
+                      <span>→</span>
+
+                      <strong>
+                        {block.duration_minutes} min
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  No uninterrupted 90+ minute flow blocks detected.
                 </div>
               )}
             </section>
