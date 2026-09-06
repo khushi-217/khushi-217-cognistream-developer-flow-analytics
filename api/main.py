@@ -1,9 +1,11 @@
+import polars as pl
 from collections import Counter
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ingestion.clickhouse_client import get_clickhouse_client
+from analytics.flow_blocks import find_uninterrupted_flow_blocks
 
 
 # ============================================================
@@ -330,6 +332,28 @@ def get_context_switches():
             )
 
     return switches
+@app.get("/api/analytics/flow-blocks")
+def get_flow_blocks():
+    events = fetch_events()
+
+    if not events:
+        return []
+
+    events_df = pl.DataFrame(events).with_columns(
+        pl.col("timestamp").str.to_datetime()
+    )
+
+    flow_blocks = find_uninterrupted_flow_blocks(events_df)
+
+    return [
+        {
+            "developer_id": row["developer_id"],
+            "start_time": row["start_time"].isoformat(),
+            "end_time": row["end_time"].isoformat(),
+            "duration_minutes": row["duration_minutes"],
+        }
+        for row in flow_blocks.iter_rows(named=True)
+    ]
 
 
 # ============================================================
