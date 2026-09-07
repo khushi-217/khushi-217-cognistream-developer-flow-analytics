@@ -300,8 +300,8 @@ function App() {
             <span className="online-dot"></span>
 
             <div>
-              <strong>Pipeline Online</strong>
-              <small>All systems operational</small>
+              <strong>API Connected</strong>
+              <small>FastAPI • Live data</small>
             </div>
           </div>
 
