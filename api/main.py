@@ -118,6 +118,7 @@ def get_analytics_summary():
     if not events:
         return {
             "total_events": 0,
+            "total_commits": 0,
             "context_switches": 0,
             "coding_events": 0,
             "communication_events": 0,
@@ -128,11 +129,6 @@ def get_analytics_summary():
             "deep_work_percent": 0,
             "communication_load_percent": 0,
         }
-
-    source_counts = Counter(
-        event["source"]
-        for event in events
-    )
 
     context_switch_sources = {
         "Slack",
@@ -171,6 +167,12 @@ def get_analytics_summary():
         if event["event_type"] in productive_event_types
     )
 
+    total_commits = sum(
+        1
+        for event in events
+        if event["event_type"] == "commit"
+    )
+
     focus_time_percent = round(
         (coding_events / total_events) * 100
     )
@@ -207,6 +209,7 @@ def get_analytics_summary():
 
     return {
         "total_events": total_events,
+        "total_commits": total_commits,
         "context_switches": context_switches,
         "coding_events": coding_events,
         "communication_events": communication_events,
@@ -297,6 +300,8 @@ def get_source_summary():
         }
         for source, count in source_counts.items()
     ]
+
+
 # ============================================================
 # CONTEXT SWITCHING ANALYTICS
 # ============================================================
@@ -332,8 +337,16 @@ def get_context_switches():
             )
 
     return switches
+
+
+# ============================================================
+# UNINTERRUPTED FLOW BLOCKS
+# ============================================================
+
 @app.get("/api/analytics/flow-blocks")
 def get_flow_blocks():
+    """Return uninterrupted coding blocks of at least 90 minutes."""
+
     events = fetch_events()
 
     if not events:

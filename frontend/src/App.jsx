@@ -444,6 +444,23 @@ function App() {
                   Productive developer activities
                 </p>
               </div>
+              <div className="metric-card">
+  <span className="metric-title">
+    Total Commits
+  </span>
+
+  <div className="metric-value">
+    {analytics.total_commits}
+  </div>
+
+  <span className="metric-label positive">
+    GitHub activity
+  </span>
+
+  <p>
+    Developer commits recorded
+  </p>
+</div>
             </section>
 
             {/* FLOW CHART */}
