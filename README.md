@@ -1,409 +1,535 @@
-CogniStream 🚀
-🎯 Problem Statement
+# CogniStream 🚀
+
+### Developer Flow-State & Cognitive Load Analytics
+
+CogniStream is an end-to-end developer analytics platform that analyzes developer activity across coding, communication, task management, and version-control tools to understand **developer flow-state, context switching, productivity patterns, and cognitive load**.
+
+Instead of measuring developer performance only through output such as commits, CogniStream focuses on the **friction experienced during the development process**.
+
+---
+
+## 🎯 Problem Statement
 
 Developers continuously switch between coding, communication, task management, and version-control activities.
 
-These frequent transitions can interrupt focused work and increase cognitive load.
+Frequent transitions between these activities can interrupt focused work and increase cognitive load.
 
-CogniStream analyzes these activities to identify:
+CogniStream analyzes unified developer activity events to identify:
 
-Developer flow-state
-Context switching
-Coding activity
-Productive events
-Communication load
-Focus time
-Deep-work periods
-Cognitive load
+* Developer flow-state
+* Context switching
+* Coding activity
+* Productive events
+* Communication load
+* Focus time
+* Deep-work periods
+* Cognitive load
+* Uninterrupted flow blocks
+* Activity distribution
 
-🏗️ System Architecture
+---
 
-GitHub ─────┐
-Slack ──────┤
-IDE ────────┼──► Python Extraction
-Jira ───────┘          │
-                       ▼
-                Apache Airflow
-                       │
-                       ▼
-             Unified Event Ingestion
-                       │
-                       ▼
-              Event Normalization
-                       │
-                       ▼
-                Data Validation
-                       │
-                       ▼
-              Polars Processing
-                       │
-                       ▼
-                 ClickHouse
-                       │
-                       ▼
-                   FastAPI
-                       │
-                       ▼
-              React + Tremor.js
-                  Dashboard
-🛠️ Technology             Stack
-Component	             Technology
-Data Extraction	        Python
-Workflow Orchestration	  Apache Airflow
-Data Processing	        Polars
-Database	              ClickHouse
-Backend API	              FastAPI
-Frontend	              React
-Visualization	        Tremor.js
-Containerization	         Docker
-CI/CD	                    GitHub Actions
-Version Control	        Git & GitHub
+# 🏗️ System Architecture
 
+```text
+Mock Developer Activity APIs
+        │
+        ├── GitHub
+        ├── Slack
+        ├── IDE
+        └── Jira
+        │
+        ▼
+Python Extraction Layer
+        │
+        ▼
+Apache Airflow
+        │
+        ▼
+Unified Event Ingestion
+        │
+        ▼
+Event Normalization & Validation
+        │
+        ▼
+Polars Data Processing
+        │
+        ▼
+ClickHouse
+        │
+        ▼
+FastAPI Analytics Layer
+        │
+        ▼
+React + Tremor.js Dashboard
+```
 
-📌 Week 1 – API Ingestion & Pipeline
-Completed
+### End-to-End Data Flow
 
-Mock developer activity data
-GitHub, Slack, IDE and Jira extraction scripts
-Apache Airflow ingestion pipeline
-Daily ingestion DAG
-Unified event ingestion
-Event normalization
-Data validation
-Automated pipeline execution and testing
-Airflow DAG
+```text
+Data Extraction
+      ↓
+Orchestration
+      ↓
+Normalization
+      ↓
+Validation
+      ↓
+Polars Processing
+      ↓
+ClickHouse Storage
+      ↓
+Analytics
+      ↓
+FastAPI
+      ↓
+React Dashboard
+```
+
+---
+
+# 🛠️ Technology Stack
+
+| Component              | Technology              |
+| ---------------------- | ----------------------- |
+| Data Extraction        | Python                  |
+| Workflow Orchestration | Apache Airflow          |
+| Data Processing        | Polars                  |
+| Analytical Database    | ClickHouse              |
+| Backend API            | FastAPI                 |
+| Frontend               | React                   |
+| Visualization          | Tremor.js               |
+| Build Tool             | Vite                    |
+| Containerization       | Docker / Docker Compose |
+| CI/CD                  | GitHub Actions          |
+| Version Control        | Git & GitHub            |
+
+---
+
+# 📌 Week 1 — API Ingestion & Pipeline
+
+## Completed
+
+Implemented the initial developer activity ingestion pipeline.
+
+### Data Sources
+
+Mock extraction modules were created for:
+
+* GitHub activity
+* Slack activity
+* IDE activity
+* Jira activity
+
+### Pipeline Components
+
+* Python extraction scripts
+* Mock developer activity data
+* Apache Airflow ingestion pipeline
+* Daily ingestion DAG
+* Unified event ingestion
+* Event normalization
+* Data validation
+* Automated pipeline execution
+* Automated testing
+
+### Airflow DAG
+
+The primary ingestion workflow is:
+
+```text
+cognistream_daily_ingestion
+```
+
+Main workflow:
+
+```text
 GitHub Extraction ─┐
 Slack Extraction ──┤
-IDE Extraction ────┼──► Unified Ingestion
-Jira Extraction ───┘          │
-                              ▼
-                     Normalize Events
-                              │
-                              ▼
-                       Validate Data
+IDE Extraction ────┤
+Jira Extraction ───┘
+        ↓
+Unified Ingestion
+        ↓
+Normalize Events
+        ↓
+Validate Data
+```
 
+---
 
+# 📊 Week 2 — Data Modeling & Base Analytics
 
-📊 Week 2 – Data Engineering & Analytics
-Completed
+## ClickHouse
 
-ClickHouse database integration
-developer_events event table
-Polars-based data cleaning and normalization
-Processed developer activity data
-Duplicate-safe event storage
-FastAPI analytics summary endpoint
-React dashboard connected with backend API
-Data Flow
-Raw Events
-    │
-    ▼
-Polars Cleaning
-    │
-    ▼
-Normalized Events
-    │
-    ▼
-ClickHouse
-    │
-    ▼
-FastAPI Analytics
-    │
-    ▼
-React Dashboard
+ClickHouse was deployed as the analytical event database.
 
-🔄 Week 3 — Advanced Flow Analytics
-Focus
+### Main Event Table
 
-Week 3 extends the platform from basic activity metrics toward deeper developer-flow analysis.
-
-Planned / In Progress
-Uninterrupted Flow Block detection
-Identification of extended coding sessions
-Advanced context-switching analysis
-Advanced SQL and Polars analytics
-Analysis of interruptions and communication events
-Context-switching visualizations
-Flow-state insights based on developer activity patterns
-
-
-Target Flow Analysis
-
-Developer Events
-       │
-       ▼
-Time-Ordered Activity
-       │
-       ▼
-Activity Grouping
-       │
-       ├── Coding
-       ├── Communication
-       ├── Commits
-       └── Other Events
-       │
-       ▼
-Flow Block Detection
-       │
-       ▼
-Context-Switch Analysis
-       │
-       ▼
-Developer Flow Insights
-
-🔄 Week 4 — Final Analytics & Project Polish
-Focus
-
-Week 4 focuses on completing the analytics layer, improving the dashboard, validating the complete pipeline, and preparing the project for final presentation.
-
-Planned / In Progress
-Final flow-state analytics
-Advanced developer productivity insights
-Context-switching analysis refinement
-Dashboard improvements
-Final visualization and UX polish
-End-to-end pipeline validation
-Final testing
-Documentation cleanup
-Final project review
-
-
-Final Project Flow
-Data Sources
-     │
-     ▼
-Extraction
-     │
-     ▼
-Airflow
-     │
-     ▼
-Normalization & Validation
-     │
-     ▼
-Polars
-     │
-     ▼
-ClickHouse
-     │
-     ▼
-Advanced Analytics
-     │
-     ▼
-FastAPI
-     │
-     ▼
-React + Tremor Dashboard
-
-
-📊 Developer Analytics
-
-CogniStream provides analytics such as:
- 
-Metric	               Description
-Flow Score	             Overall developer flow level
-Cognitive Load	       Estimated cognitive workload from activity
-Context Switches	       Detected transitions between different activity types
-Productive Events	       Productive developer actions
-Focus Time	             Percentage of focused activity
-Deep Work	             Percentage of deeper uninterrupted activity
-Communication Load	 Communication-related activity
-Activity Distribution	 Activity grouped by source
-Events by Source	       GitHub, Slack, IDE, and Jira activity
-Session Health	       Overall session condition
-Recent Activity	       Latest developer events
-
-🚀 Dashboard
-
-The React + Tremor dashboard provides an interactive overview of developer activity.
-
-Dashboard Components
-                 Developer Analytics
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
-   Flow Score      Cognitive Load    Context Switches
-        │                │                │
-        └────────────────┼────────────────┘
-                         ▼
-                 Activity Analytics
-                         │
-        ┌────────────────┼────────────────┐
-        ▼                ▼                ▼
- Activity Distribution  Events by Source  Session Health
-                         │
-                         ▼
-                   Live Activity
-
-Current Dashboard Metrics
-
-The dashboard is connected to the FastAPI backend and displays metrics generated from the processed event data.
-
-🔌 FastAPI Backend
-
-The backend exposes analytics through:
-
-GET /api/analytics/summary
-
-Example response:
-
-{
-  "total_events": 5,
-  "context_switches": 2,
-  "coding_events": 2,
-  "communication_events": 1,
-  "productive_events": 3,
-  "flow_score": 30,
-  "cognitive_load": 40,
-  "focus_time_percent": 40,
-  "deep_work_percent": 60,
-  "communication_load_percent": 20
-}
-
-🗄️ ClickHouse
-
-ClickHouse is used as the analytical event database.
-
-Main Event Table
+```text
 cognistream.developer_events
+```
 
 The table stores normalized developer activity including:
 
-Developer ID
-Timestamp
-Source
-Event type
-Activity information
+* Developer ID
+* Timestamp
+* Source
+* Event type
+* Activity information
 
-Example sources:
+### Example Sources
 
+```text
 VSCode
 Slack
 GitHub
 Jira
-🐻 Polars Data Processing
+```
 
-Polars is used to clean, normalize, and transform extracted event data before analytical storage.
+ClickHouse provides the analytical storage layer for time-oriented developer event analysis.
 
+---
+
+# 🧹 Polars Data Processing
+
+Polars is used to clean, normalize, transform, deduplicate, and prepare developer activity events before analytical storage.
+
+### Processing Flow
+
+```text
 Raw JSON Events
-       │
-       ▼
-Polars
-       │
-       ├── Cleaning
-       ├── Normalization
-       ├── Transformation
-       └── Validation
-       │
-       ▼
+      ↓
+     Polars
+      ↓
+ ┌───────────────┐
+ │ Cleaning      │
+ │ Normalization │
+ │ Transformation│
+ │ Deduplication │
+ │ Validation    │
+ └───────────────┘
+      ↓
 Processed Events
-       │
-       ▼
+      ↓
 ClickHouse
+```
 
-🌬️ Apache Airflow
+The processing pipeline converts raw extracted events into a consistent analytical structure.
 
-The main ingestion DAG is:
+---
 
-cognistream_daily_ingestion
-DAG Tasks
-github_extraction
-        │
-slack_extraction
-        │
-ide_extraction
-        │
-jira_extraction
-        │
-        ▼
-unified_ingestion
-        │
-        ▼
-normalize_events
-        │
-        ▼
-validate_data
+# 📈 Base Dashboard Metrics
 
-Airflow is responsible for orchestrating the daily ingestion and processing workflow.
+The initial dashboard provides analytics such as:
 
-🐳 Docker
+* Total Events
+* Context Switches
+* Coding Events
+* Communication Events
+* Productive Events
+* Flow Score
+* Cognitive Load
+* Focus Time
+* Deep Work
+* Communication Load
 
-Docker Compose provides reproducible project infrastructure.
+The React dashboard consumes analytical data through the FastAPI backend.
 
-Services
-Docker Compose
-      │
-      ├── ClickHouse
-      │
-      └── Apache Airflow
-Start ClickHouse
-docker compose up -d clickhouse
-Start the complete Docker environment
-docker compose up -d
+---
 
+# 🔍 Mid-Project Review
 
-🧪 Testing
+The mid-project implementation was validated through:
 
-The project includes automated tests covering:
-
-Data ingestion
-Polars processing
-ClickHouse integration
-
-Run tests with:
-
-pytest
-
-The project also verifies the frontend through:
-
-npm run lint
-npm run build
-
-⚙️ CI/CD
-
-GitHub Actions is configured to validate both the frontend and Python components.
-
-                    GitHub Actions
-                          │
-             ┌────────────┴────────────┐
-             ▼                         ▼
-         Frontend                    Python
-             │                         │
-        npm ci                    Install deps
-             │                         │
-          Lint                    ClickHouse
-             │                         │
-          Build                     pytest
-CI Pipeline
-Frontend dependency installation
-Frontend linting
-Frontend production build
-Python dependency installation
-ClickHouse service startup
-Automated pytest execution
-
-📸 Project Evidence
+* Successful Airflow DAG execution
+* ClickHouse event storage
+* Polars processing
+* FastAPI analytics response
+* React dashboard rendering
+* Tremor.js dashboard components
 
 Implementation evidence is maintained in:
 
+```text
 screenshots/
 └── mid-review/
-Mid-Review Evidence
-Evidence	File
-Airflow successful DAG execution	airflow sucess screenshot.png
-Raw event data	raw-events.png
-Polars normalized data	polars-normalized.png
-ClickHouse developer events	clickhouse-developer-events.png
-FastAPI analytics response	fastapi-summary.png
-React dashboard	Dashboard.png
+```
 
+Available evidence includes:
 
-📂 Project Structure
+| Evidence                         | File                              |
+| -------------------------------- | --------------------------------- |
+| Airflow successful DAG execution | `airflow sucess screenshot.png`   |
+| Raw event data                   | `raw-events.png`                  |
+| Polars normalized data           | `polars-normalized.png`           |
+| ClickHouse developer events      | `clickhouse-developer-events.png` |
+| FastAPI analytics response       | `fastapi-summary.png`             |
+| React dashboard                  | `Dashboard.png`                   |
+
+---
+
+# 🧠 Week 3 — Advanced Flow Analytics
+
+## Uninterrupted Flow Blocks
+
+CogniStream identifies uninterrupted coding periods of **90 minutes or more** without interruption from communication/task-management sources such as Slack or Jira.
+
+This provides a more meaningful view of deep-work periods than simply counting coding events.
+
+### Example Logic
+
+```text
+VSCode
+  ↓
+Coding
+  ↓
+Coding
+  ↓
+Coding
+  ↓
+90+ Minutes Without Slack/Jira
+  ↓
+Uninterrupted Flow Block
+```
+
+A dedicated analytics module was implemented:
+
+```text
+analytics/flow_blocks.py
+```
+
+Dedicated tests verify:
+
+* Detection of a 90-minute flow block
+* Slack interruption correctly breaking a flow block
+
+---
+
+# 🔄 Context-Switching Analytics
+
+CogniStream detects transitions between developer activities caused by interruptions such as Slack and Jira events.
+
+Implemented analytics module:
+
+```text
+analytics/context_switches.py
+```
+
+The analytics captures:
+
+* Developer ID
+* Switch timestamp
+* Previous activity source
+* Interruption source
+
+### Example
+
+```text
+VSCode → Slack
+```
+
+or
+
+```text
+GitHub → Jira
+```
+
+This helps identify when developers leave their current working context.
+
+Dedicated tests validate context-switch detection.
+
+---
+
+# 📊 Context-Switching Dashboard
+
+The dashboard includes a dedicated **Context Switching** visualization showing:
+
+* Total context switches
+* Switch timestamps
+* Previous source
+* Interruption source
+
+This converts raw activity transitions into an interpretable developer-friction signal.
+
+---
+
+# ⚡ Week 4 — FastAPI Analytics Layer
+
+FastAPI provides the backend analytics layer between ClickHouse and the React frontend.
+
+### API Endpoints
+
+```text
+GET /api/events
+
+GET /api/analytics/summary
+
+GET /api/analytics/activity
+
+GET /api/analytics/event-types
+
+GET /api/analytics/sources
+
+GET /api/analytics/recent
+
+GET /api/analytics/context-switches
+
+GET /api/analytics/flow-blocks
+```
+
+The API reads analytical event data and exposes structured results to the frontend.
+
+---
+
+# 📊 Current Dashboard
+
+The final dashboard brings together developer productivity and developer-friction analytics.
+
+### Core Metrics
+
+* Flow Score
+* Cognitive Load
+* Context Switches
+* Productive Events
+
+### Activity Analytics
+
+* Activity Distribution
+* Events by Source
+* Coding activity
+* Communication activity
+
+### Session Analytics
+
+* Session Health
+* Focus Time
+* Deep Work
+* Communication Load
+* Cognitive Load
+
+### Advanced Analytics
+
+* Context Switching
+* Uninterrupted Flow Blocks
+* Recent Activity
+* Live Activity
+
+---
+
+# 🔗 Backend → Frontend Integration
+
+The final architecture connects the frontend directly to the FastAPI analytics layer.
+
+```text
+ClickHouse
+     ↓
+FastAPI
+     ↓
+React
+     ↓
+Tremor.js
+     ↓
+Analytics Dashboard
+```
+
+The frontend validates API responses before rendering analytics data and handles empty states for analytics that do not have matching events.
+
+---
+
+# 🐳 Docker Infrastructure
+
+Docker Compose provides reproducible infrastructure for the project.
+
+### Main Services
+
+```text
+Docker Compose
+     │
+     ├── ClickHouse
+     │
+     └── Apache Airflow
+```
+
+### Start ClickHouse
+
+```bash
+docker compose up -d clickhouse
+```
+
+### Start the complete Docker environment
+
+```bash
+docker compose up -d
+```
+
+---
+
+# 🧪 Testing & Validation
+
+The project includes automated tests covering core data-engineering functionality.
+
+### Test Coverage
+
+* Data ingestion
+* Polars processing
+* ClickHouse integration
+* Uninterrupted Flow Block analytics
+* Context-Switching analytics
+
+Run the Python test suite:
+
+```bash
+pytest
+```
+
+Frontend validation:
+
+```bash
+npm run lint
+npm run build
+```
+
+The final Week 4 implementation was validated with the complete test suite and a successful production frontend build.
+
+---
+
+# ⚙️ CI/CD
+
+GitHub Actions is configured to validate the Python and frontend components.
+
+### CI Pipeline
+
+```text
+GitHub Actions
+      │
+      ├── Frontend
+      │     ├── npm ci
+      │     ├── Lint
+      │     └── Build
+      │
+      └── Python
+            ├── Install dependencies
+            ├── Start ClickHouse
+            └── pytest
+```
+
+The CI workflow validates the project automatically during repository changes.
+
+---
+
+# 📁 Project Structure
+
+```text
 CogniStream/
 │
 ├── .github/
 │   └── workflows/
 │       └── main.yml
+│
+├── analytics/
+│   ├── context_switches.py
+│   └── flow_blocks.py
 │
 ├── api/
 │   └── main.py
@@ -437,57 +563,128 @@ CogniStream/
 ├── ide_activity.py
 ├── event_ingestion.py
 ├── test_ingestion.py
+│
 ├── events.json
 ├── events_normalized.json
 ├── docker-compose.yml
 ├── Dockerfile
-├── Dockerfile.txt
 ├── requirements.txt
 └── README.md
-▶️ How to Run
-1. Start ClickHouse
-docker compose up -d clickhouse
-2. Start FastAPI
+```
+
+---
+
+# ▶️ How to Run
+
+## 1. Start ClickHouse
 
 From the project root:
 
+```bash
+docker compose up -d clickhouse
+```
+
+## 2. Start FastAPI
+
+From the project root:
+
+```bash
 uvicorn api.main:app --reload --port 8001
-3. Start Frontend
+```
+
+The backend will be available on:
+
+```text
+http://127.0.0.1:8001
+```
+
+## 3. Start the Frontend
+
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
 The frontend can then be accessed through the Vite development server.
 
-📍 Project Status
-Component	Status
-API Ingestion	✅ Completed
-Airflow Pipeline	✅ Completed
-Event Normalization	✅ Completed
-Data Validation	✅ Completed
-Polars Processing	✅ Completed
-ClickHouse Storage	✅ Completed
-FastAPI Analytics	✅ Completed
-React Dashboard	✅ Completed
-Docker Infrastructure	✅ Completed
-CI/CD	✅ Configured
-Advanced Flow Analytics	🔄 In Progress
-Context-Switching Analytics	🔄 In Progress
-Final Dashboard Polish	⏳ Week 4
-Final End-to-End Validation	⏳ Week 4
-🎯 Project Goal
+---
 
-CogniStream brings together:
+# 📌 Final Project Status
 
-Data Ingestion → Orchestration → Processing → Storage → Analytics → Visualization
+| Component                        | Status       |
+| -------------------------------- | ------------ |
+| API Ingestion                    | ✅ Completed  |
+| Airflow Pipeline                 | ✅ Completed  |
+| Event Normalization              | ✅ Completed  |
+| Data Validation                  | ✅ Completed  |
+| Polars Processing                | ✅ Completed  |
+| ClickHouse Storage               | ✅ Completed  |
+| FastAPI Analytics                | ✅ Completed  |
+| React Dashboard                  | ✅ Completed  |
+| Tremor.js Visualization          | ✅ Completed  |
+| Docker Infrastructure            | ✅ Completed  |
+| CI/CD                            | ✅ Configured |
+| Uninterrupted Flow Analytics     | ✅ Completed  |
+| Context-Switching Analytics      | ✅ Completed  |
+| Context-Switching Visualization  | ✅ Completed  |
+| Flow Block Dashboard Integration | ✅ Completed  |
+| Final Dashboard Polish           | ✅ Completed  |
+| Final End-to-End Validation      | ✅ Completed  |
 
-to provide a data-driven understanding of developer productivity, flow-state, context switching, and cognitive load.
+---
 
-👩‍💻 Author
+# 🎯 Final Project Outcome
 
-Khushi Rawat
+CogniStream successfully combines:
+
+```text
+Data Ingestion
+      ↓
+Orchestration
+      ↓
+Processing
+      ↓
+Storage
+      ↓
+Analytics
+      ↓
+API Layer
+      ↓
+Visualization
+```
+
+The resulting platform provides a unified view of developer activity while focusing on **developer friction, flow-state, context switching, deep-work periods, and cognitive load** rather than measuring productivity only through output.
+
+### Final Architecture
+
+```text
+GitHub ──────┐
+Slack ───────┤
+IDE ─────────┤
+Jira ────────┘
+      ↓
+   Python
+      ↓
+ Apache Airflow
+      ↓
+    Polars
+      ↓
+  ClickHouse
+      ↓
+   FastAPI
+      ↓
+React + Tremor.js
+      ↓
+CogniStream Analytics Dashboard
+```
+
+---
+
+# 👩‍💻 Author
+
+**Khushi Rawat**
 
 B.Tech Computer Science Engineering
 
-GitHub: khushi-217
-
+GitHub: `khushi-217`
