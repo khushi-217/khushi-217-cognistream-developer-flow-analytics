@@ -439,6 +439,35 @@ body {
   height: 100%;
   display: block;
 }
+.flow-line {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.flow-area {
+  fill: var(--blue);
+  opacity: 0.08;
+  stroke: none;
+}
+.flow-card .y-axis {
+  width: 32px;
+  height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-right: 8px;
+  box-sizing: border-box;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+  flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
 
 .flow-card .chart-area svg,
 .flow-card .chart svg {
