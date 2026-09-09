@@ -415,6 +415,9 @@ The final dashboard brings together developer productivity and developer-frictio
 * Recent Activity
 * Live Activity
 
+### 🖥️ Final Dashboard Preview
+
+![CogniStream Final Dashboard](screenshots/final-dashboard.png)
 ---
 
 # 🔗 Backend → Frontend Integration
