@@ -519,8 +519,9 @@ The CI workflow validates the project automatically during repository changes.
 ---
 
 # 📁 Project Structure
-
 ```text
+
+
 CogniStream/
 │
 ├── .github/
@@ -563,6 +564,9 @@ CogniStream/
 ├── ide_activity.py
 ├── event_ingestion.py
 ├── test_ingestion.py
+├── jira_api.py
+├── normalize_events.py
+├── validate_data.py
 │
 ├── events.json
 ├── events_normalized.json
@@ -570,7 +574,8 @@ CogniStream/
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
-```
+
+
 
 ---
 
