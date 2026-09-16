@@ -657,6 +657,45 @@ function App() {
 
             {/* LOWER CARDS */}
             <section className="dashboard-grid">
+                            {/* ACTIVITY RATIO */}
+              <div className="card">
+                <div className="card-header">
+                  <div>
+                    <span className="section-label">
+                      ANALYTICS
+                    </span>
+
+                    <h2>Activity Ratio Breakdown</h2>
+                  </div>
+                </div>
+
+                <div style={{ height: "260px", marginTop: "12px" }}>
+                  <BarChart
+                    data={[
+                      {
+                        type: "Coding",
+                        events: analytics.coding_events || 0,
+                      },
+                      {
+                        type: "Communication",
+                        events: analytics.communication_events || 0,
+                      },
+                      {
+                        type: "Productive",
+                        events: analytics.productive_events || 0,
+                      },
+                    ]}
+                    index="type"
+                    categories={["events"]}
+                    colors={["blue"]}
+                    valueFormatter={(value) => `${value} events`}
+                    showLegend={false}
+                    showGridLines={true}
+                    showAnimation={false}
+                    yAxisWidth={45}
+                  />
+                </div>
+              </div>
               {/* ACTIVITY */}
               <div className="card">
                 <div className="card-header">
