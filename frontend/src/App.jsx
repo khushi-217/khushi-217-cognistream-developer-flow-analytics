@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { BarChart } from "@tremor/react";
 import "./App.css";
 
 const API_BASE_URL = "http://127.0.0.1:8001";
@@ -10,957 +9,698 @@ function App() {
   const [contextSwitches, setContextSwitches] = useState([]);
   const [flowBlocks, setFlowBlocks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadDashboard = async () => {
+    async function loadDashboard() {
       try {
-        setLoading(true);
-        setError("");
-
         const [eventsResponse, analyticsResponse] = await Promise.all([
           fetch(`${API_BASE_URL}/api/events`),
           fetch(`${API_BASE_URL}/api/analytics/summary`),
         ]);
 
-        if (!eventsResponse.ok) {
-          throw new Error(
-            `Events API failed with status ${eventsResponse.status}`
-          );
-        }
-
-        if (!analyticsResponse.ok) {
-          throw new Error(
-            `Analytics API failed with status ${analyticsResponse.status}`
-          );
+        if (!eventsResponse.ok || !analyticsResponse.ok) {
+          throw new Error("Failed to fetch dashboard data");
         }
 
         const eventsData = await eventsResponse.json();
         const analyticsData = await analyticsResponse.json();
 
-        if (!Array.isArray(eventsData)) {
-          throw new Error("Events API returned invalid data");
-        }
-
         setEvents(eventsData);
         setAnalytics(analyticsData);
 
-        // Context-switch analytics are loaded separately so that
-        // an issue with this endpoint does not break the main dashboard.
         try {
-          const contextSwitchResponse = await fetch(
+          const contextResponse = await fetch(
             `${API_BASE_URL}/api/analytics/context-switches`
           );
 
-          if (!contextSwitchResponse.ok) {
-            throw new Error(
-              `Context switch API failed with status ${contextSwitchResponse.status}`
-            );
+          if (contextResponse.ok) {
+            setContextSwitches(await contextResponse.json());
+          } else {
+            setContextSwitches([]);
           }
-
-          const contextSwitchData = await contextSwitchResponse.json();
-
-          if (!Array.isArray(contextSwitchData)) {
-            throw new Error("Context switch API returned invalid data");
-          }
-
-          setContextSwitches(contextSwitchData);
-        } catch (contextError) {
-          console.error(
-            "Context switching analytics error:",
-            contextError
-          );
+        } catch {
           setContextSwitches([]);
         }
 
-        // Uninterrupted flow-block analytics are loaded separately
-        // so that an issue with this endpoint does not break the main dashboard.
         try {
-          const flowBlockResponse = await fetch(
+          const flowResponse = await fetch(
             `${API_BASE_URL}/api/analytics/flow-blocks`
           );
 
-          if (!flowBlockResponse.ok) {
-            throw new Error(
-              `Flow block API failed with status ${flowBlockResponse.status}`
-            );
+          if (flowResponse.ok) {
+            setFlowBlocks(await flowResponse.json());
+          } else {
+            setFlowBlocks([]);
           }
-
-          const flowBlockData = await flowBlockResponse.json();
-
-          if (!Array.isArray(flowBlockData)) {
-            throw new Error("Flow block API returned invalid data");
-          }
-
-          setFlowBlocks(flowBlockData);
-        } catch (flowBlockError) {
-          console.error(
-            "Flow block analytics error:",
-            flowBlockError
-          );
+        } catch {
           setFlowBlocks([]);
         }
-      } catch (err) {
-        console.error("Dashboard error:", err);
-        setError(
-          "Unable to connect to the CogniStream API. Make sure FastAPI is running on port 8001."
-        );
+      } catch (error) {
+        console.error("Dashboard loading error:", error);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     loadDashboard();
-
-    const interval = setInterval(loadDashboard, 30000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const sourceCounts = useMemo(() => {
     return events.reduce((counts, event) => {
-      counts[event.source] = (counts[event.source] || 0) + 1;
+      const source = event.source || "Unknown";
+      counts[source] = (counts[source] || 0) + 1;
       return counts;
     }, {});
   }, [events]);
 
-  const flowStatus = (score) => {
-    if (score >= 70) return "Excellent";
-    if (score >= 50) return "Good";
-    return "Needs attention";
-  };
+  const flowStatus = analytics
+    ? analytics.flow_score >= 70
+      ? "Strong"
+      : analytics.flow_score >= 40
+        ? "Moderate"
+        : "Low"
+    : "—";
 
-  const cognitiveStatus = (value) => {
-    if (value <= 40) return "Healthy";
-    if (value <= 60) return "Moderate";
-    return "High";
-  };
+  const cognitiveStatus = analytics
+    ? analytics.cognitive_load <= 30
+      ? "Low"
+      : analytics.cognitive_load <= 60
+        ? "Moderate"
+        : "High"
+    : "—";
 
   const getEventStatus = (event) => {
-    if (
-      event.source === "Slack" ||
-      event.source === "Jira"
-    ) {
-      return {
-        label: "Context switch",
-        className: "switch",
-      };
+    if (event.event_type === "commit") {
+      return "Productive";
     }
 
     if (
       event.event_type === "coding" ||
-      event.event_type === "coding_start" ||
-      event.event_type === "commit"
+      event.event_type === "coding_start"
     ) {
-      return {
-        label: "Focused",
-        className: "focused",
-      };
+      return "Focused";
     }
 
-    return {
-      label: "Productive",
-      className: "productive",
-    };
-  };
-
-  const flowPoints = useMemo(() => {
-    if (!events.length) return [];
-
-    const sortedEvents = [...events].sort(
-      (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-    );
-
-    return sortedEvents.map((event, index) => {
-      let score = 50;
-
-      if (
-        event.event_type === "coding" ||
-        event.event_type === "coding_start"
-      ) {
-        score += 25;
-      }
-
-      if (event.event_type === "commit") {
-        score += 15;
-      }
-
-      if (
-        event.source === "Slack" ||
-        event.source === "Jira"
-      ) {
-        score -= 25;
-      }
-
-      score = Math.max(0, Math.min(100, score));
-
-      return {
-        ...event,
-        score,
-        index,
-      };
-    });
-  }, [events]);
-
-  const createChartPath = () => {
-    if (flowPoints.length === 0) return "";
-
-    const width = 100;
-    const height = 170;
-
-    if (flowPoints.length === 1) {
-      const y =
-        height - (flowPoints[0].score / 100) * height;
-
-      return `M 0 ${y}`;
+    if (
+      event.source === "Slack" ||
+      event.source === "Jira" ||
+      event.event_type === "communication"
+    ) {
+      return "Interrupting";
     }
 
-    return flowPoints
-      .map((point, index) => {
-        const x =
-          (index / (flowPoints.length - 1)) * width;
-
-        const y =
-          height - (point.score / 100) * height;
-
-        return `${index === 0 ? "M" : "L"} ${x} ${y}`;
-      })
-      .join(" ");
+    return "Active";
   };
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString([], {
+    if (!timestamp) {
+      return "—";
+    }
+
+    const date = new Date(timestamp);
+
+    if (Number.isNaN(date.getTime())) {
+      return "—";
+    }
+
+    return date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
   };
 
-  const contextSwitchChartData = useMemo(() => {
-    return contextSwitches.map((switchEvent) => ({
-      time: formatTime(switchEvent.timestamp),
-      Slack: switchEvent.to_source === "Slack" ? 1 : 0,
-      Jira: switchEvent.to_source === "Jira" ? 1 : 0,
-    }));
-  }, [contextSwitches]);
+  const flowPoints = useMemo(() => {
+    const sortedEvents = [...events].sort(
+      (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+    );
+
+    return sortedEvents.reduce(
+      (result, event) => {
+        let nextScore = result.score;
+
+        if (
+          event.event_type === "coding" ||
+          event.event_type === "coding_start"
+        ) {
+          nextScore += 25;
+        }
+
+        if (event.event_type === "commit") {
+          nextScore += 15;
+        }
+
+        if (event.source === "Slack" || event.source === "Jira") {
+          nextScore -= 25;
+        }
+
+        nextScore = Math.max(0, Math.min(100, nextScore));
+
+        result.points.push({
+          time: formatTime(event.timestamp),
+          score: nextScore,
+        });
+
+        return {
+          score: nextScore,
+          points: result.points,
+        };
+      },
+      { score: 50, points: [] }
+    ).points;
+  }, [events]);
+
+  const createChartPath = () => {
+    if (flowPoints.length === 0) {
+      return "";
+    }
+
+    const width = 760;
+    const height = 220;
+    const padding = 20;
+
+    return flowPoints
+      .map((point, index) => {
+        const x =
+          flowPoints.length === 1
+            ? width / 2
+            : padding +
+              (index / (flowPoints.length - 1)) * (width - padding * 2);
+
+        const y =
+          height -
+          padding -
+          (point.score / 100) * (height - padding * 2);
+
+        return `${index === 0 ? "M" : "L"} ${x} ${y}`;
+      })
+      .join(" ");
+  };
+
+  if (loading) {
+    return (
+      <div className="app-shell">
+        <div className="loading-screen">Loading dashboard...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="app">
-      {/* SIDEBAR */}
+    <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-icon">C</div>
-
+          <div className="brand-mark">C</div>
           <div>
-            <h2>CogniStream</h2>
-            <span>Developer Analytics</span>
+            <div className="brand-title">CogniStream</div>
+            <div className="brand-subtitle">Developer Analytics</div>
           </div>
         </div>
 
-        <div className="sidebar-section">
-          <p>WORKSPACE</p>
-
+        <nav className="sidebar-nav">
           <button className="nav-item active">
-            <span>◈</span>
-            Dashboard
-          </button>
-
-          <button className="nav-item">
             <span>◉</span>
-            Developer Flow
+            Overview
           </button>
-
           <button className="nav-item">
-            <span>⌁</span>
-            Cognitive Load
+            <span>◌</span>
+            Flow State
           </button>
-
           <button className="nav-item">
             <span>↔</span>
-            Context Switching
+            Context Switches
           </button>
-        </div>
-
-        <div className="sidebar-section">
-          <p>DATA</p>
-
           <button className="nav-item">
-            <span>◫</span>
-            Events
+            <span>▣</span>
+            Activity
           </button>
+        </nav>
 
-          <button className="nav-item">
-            <span>⚙</span>
-            Integrations
-          </button>
-        </div>
-
-        <div className="sidebar-bottom">
-          <div className="pipeline">
-            <span className="online-dot"></span>
-
-            <div>
-              <strong>API Connected</strong>
-              <small>FastAPI • Live data</small>
-            </div>
-          </div>
-
-          <div className="developer-mini">
-            <div className="avatar">K</div>
-
-            <div>
-              <strong>DEV001</strong>
-              <small>Developer</small>
-            </div>
+        <div className="sidebar-footer">
+          <div className="user-avatar">K</div>
+          <div>
+            <div className="user-name">Developer</div>
+            <div className="user-role">Analytics View</div>
           </div>
         </div>
       </aside>
 
-      {/* MAIN */}
-      <main className="main">
+      <main className="main-content">
         <header className="topbar">
-          <div>
-            <span className="eyebrow">
-              DEVELOPER WORKSPACE
-            </span>
-
-            <h1>Flow-State Overview</h1>
-
-            <p>
-              Monitor developer productivity, cognitive load
-              and context switching in real time.
-            </p>
+          <div className="breadcrumb">
+            Analytics / <span>Today</span>
           </div>
 
-          <div className="top-actions">
-            <button className="date-button">
-              Today
-            </button>
-
-            <div className="live">
-              <span></span>
+          <div className="topbar-actions">
+            <button className="topbar-button">Today</button>
+            <div className="live-indicator">
+              <span className="live-dot"></span>
               Live
             </div>
           </div>
         </header>
 
-        {/* LOADING */}
-        {loading && (
-          <div className="card" style={{ padding: "25px" }}>
-            Loading CogniStream analytics...
+        <section className="page-header">
+          <div>
+            <span className="section-label">COGNISTREAM</span>
+            <h1>Flow-State Overview</h1>
+            <p>
+              Monitor developer focus, cognitive load, and context switching.
+            </p>
           </div>
-        )}
+        </section>
 
-        {/* ERROR */}
-        {!loading && error && (
-          <div
-            className="card"
-            style={{
-              padding: "25px",
-              color: "#b04b4b",
-            }}
-          >
-            {error}
+        <section className="dashboard-grid">
+          <div className="metric-card">
+            <span className="metric-label">FLOW SCORE</span>
+            <div className="metric-value">
+              {analytics?.flow_score ?? 0}
+              <span className="metric-unit">/100</span>
+            </div>
+            <div className="metric-status">{flowStatus}</div>
           </div>
-        )}
 
-        {/* DASHBOARD */}
-        {!loading && !error && analytics && (
-          <>
-            {/* METRICS */}
-            <section className="metrics">
-              <div className="metric-card">
-                <span className="metric-title">
-                  Flow Score
-                </span>
+          <div className="metric-card">
+            <span className="metric-label">COGNITIVE LOAD</span>
+            <div className="metric-value">
+              {analytics?.cognitive_load ?? 0}
+              <span className="metric-unit">%</span>
+            </div>
+            <div className="metric-status">{cognitiveStatus}</div>
+          </div>
 
-                <div className="metric-value">
-                  {analytics.flow_score}%
-                </div>
+          <div className="metric-card">
+            <span className="metric-label">CONTEXT SWITCHES</span>
+            <div className="metric-value">
+              {analytics?.context_switches ?? 0}
+            </div>
+            <div className="metric-status">Detected</div>
+          </div>
 
-                <span className="metric-label">
-                  {flowStatus(analytics.flow_score)}
-                </span>
+          <div className="metric-card">
+            <span className="metric-label">PRODUCTIVE EVENTS</span>
+            <div className="metric-value">
+              {analytics?.productive_events ?? 0}
+            </div>
+            <div className="metric-status">Tracked</div>
+          </div>
 
-                <p>
-                  Calculated from developer activity
-                </p>
-              </div>
+          <div className="metric-card">
+            <span className="metric-label">TOTAL COMMITS</span>
+            <div className="metric-value">
+              {analytics?.total_commits ?? 0}
+            </div>
+            <div className="metric-status">Tracked</div>
+          </div>
+        </section>
 
-              <div className="metric-card">
-                <span className="metric-title">
-                  Cognitive Load
-                </span>
+        <section className="card flow-card">
+          <div className="card-header">
+            <div>
+              <span className="section-label">FLOW STATE</span>
+              <h2>Developer Flow</h2>
+            </div>
 
-                <div className="metric-value">
-                  {analytics.cognitive_load}%
-                </div>
+            <div className="chart-legend">
+              <span className="legend-dot"></span>
+              Flow score
+            </div>
+          </div>
 
-                <span className="metric-label">
-                  {cognitiveStatus(
-                    analytics.cognitive_load
-                  )}
-                </span>
-
-                <p>
-                  Based on current developer events
-                </p>
-              </div>
-
-              <div className="metric-card">
-                <span className="metric-title">
-                  Context Switches
-                </span>
-
-                <div className="metric-value">
-                  {analytics.context_switches}
-                </div>
-
-                <span className="metric-label">
-                  {analytics.context_switches <= 2
-                    ? "Low"
-                    : "High"}
-                </span>
-
-                <p>
-                  During the current session
-                </p>
-              </div>
-
-              <div className="metric-card">
-                <span className="metric-title">
-                  Productive Events
-                </span>
-
-                <div className="metric-value">
-                  {analytics.productive_events}
-                </div>
-
-                <span className="metric-label positive">
-                  On track
-                </span>
-
-                <p>
-                  Productive developer activities
-                </p>
-              </div>
-              <div className="metric-card">
-  <span className="metric-title">
-    Total Commits
-  </span>
-
-  <div className="metric-value">
-    {analytics.total_commits}
-  </div>
-
-  <span className="metric-label positive">
-    GitHub activity
-  </span>
-
-  <p>
-    Developer commits recorded
-  </p>
-</div>
-            </section>
-
-            {/* FLOW CHART */}
-            <section className="card flow-card">
-              <div className="card-header">
-                <div>
-                  <span className="section-label">
-                    ANALYTICS
-                  </span>
-
-                  <h2>Developer Flow</h2>
-                </div>
-
-                <span className="today-label">
-                  Today
-                </span>
-              </div>
-
-              <div className="chart">
-                <div className="y-axis">
+          <div className="chart-area">
+            {flowPoints.length > 0 ? (
+              <>
+                <div className="flow-scale">
                   <span>100</span>
-                  <span>75</span>
                   <span>50</span>
-                  <span>25</span>
                   <span>0</span>
                 </div>
 
-                <div className="chart-area">
-                  <div className="grid-line line-100"></div>
-                  <div className="grid-line line-75"></div>
-                  <div className="grid-line line-50"></div>
-                  <div className="grid-line line-25"></div>
-                  <div className="grid-line line-0"></div>
-
-                  <svg
-                    className="flow-svg"
-                    viewBox="0 0 100 170"
-                    preserveAspectRatio="none"
-                  >
-                    <defs>
-                      <linearGradient
-                        id="flowGradient"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopOpacity="0.25"
-                        />
-
-                        <stop
-                          offset="100%"
-                          stopOpacity="0"
-                        />
-                      </linearGradient>
-                    </defs>
-
-                    <path
-                      className="flow-area"
-                      d={
-                        flowPoints.length
-                          ? `${createChartPath()} L 100 170 L 0 170 Z`
-                          : ""
-                      }
-                    />
-
-                    <path
-                      className="flow-line"
-                      d={createChartPath()}
-                    />
-                  </svg>
-
-                  <div className="x-axis">
-                    {flowPoints.map((point) => (
-                      <span key={point.timestamp}>
-                        {formatTime(point.timestamp)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* CONTEXT SWITCHING */}
-            <section className="card context-switch-card">
-              <div className="card-header">
-                <div>
-                  <span className="section-label">
-                    CONTEXT SWITCHING
-                  </span>
-
-                  <h2>Interruption Sources</h2>
-                </div>
-
-                <span className="today-label">
-                  {contextSwitches.length} switches
-                </span>
-              </div>
-
-              {contextSwitches.length > 0 ? (
-                <>
-                  <BarChart
-                    data={contextSwitchChartData}
-                    index="time"
-                    categories={["Slack", "Jira"]}
-                    colors={["blue", "amber"]}
-                    yAxisWidth={40}
-                    showLegend={true}
-                    showGridLines={true}
-                    showAnimation={true}
-                    autoMinValue={0}
-                    valueFormatter={(value) => `${value}`}
+                <svg
+                  className="chart"
+                  viewBox="0 0 760 220"
+                  preserveAspectRatio="none"
+                >
+                  <line
+                    x1="20"
+                    y1="20"
+                    x2="740"
+                    y2="20"
+                    className="chart-grid-line"
                   />
 
-                  <div className="context-switch-list">
-                    {contextSwitches.map((switchEvent) => (
-                      <div
-                        className="context-switch-row"
-                        key={`${switchEvent.timestamp}-${switchEvent.from_source}-${switchEvent.to_source}`}
-                      >
-                        <span className="time">
-                          {formatTime(
-                            switchEvent.timestamp
-                          )}
-                        </span>
+                  <line
+                    x1="20"
+                    y1="110"
+                    x2="740"
+                    y2="110"
+                    className="chart-grid-line"
+                  />
 
-                        <span>
-                          {switchEvent.from_source}
-                        </span>
+                  <line
+                    x1="20"
+                    y1="200"
+                    x2="740"
+                    y2="200"
+                    className="chart-grid-line"
+                  />
 
-                        <span>→</span>
+                  <path
+                    d={createChartPath()}
+                    className="flow-line"
+                    fill="none"
+                  />
 
+                  {flowPoints.map((point, index) => {
+                    const x =
+                      flowPoints.length === 1
+                        ? 380
+                        : 20 +
+                          (index / (flowPoints.length - 1)) * 720;
+
+                    const y = 200 - (point.score / 100) * 180;
+
+                    return (
+                      <circle
+                        key={`${point.time}-${index}`}
+                        cx={x}
+                        cy={y}
+                        r="5"
+                        className="flow-point"
+                      />
+                    );
+                  })}
+                </svg>
+
+                <div className="flow-time-labels">
+                  {flowPoints.map((point, index) => {
+                    if (
+                      flowPoints.length > 6 &&
+                      index !== 0 &&
+                      index !== flowPoints.length - 1 &&
+                      index % 2 !== 0
+                    ) {
+                      return null;
+                    }
+
+                    return (
+                      <span key={`${point.time}-label-${index}`}>
+                        {point.time}
+                      </span>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="empty-state">No flow data available.</div>
+            )}
+          </div>
+        </section>
+
+        <section className="dashboard-grid">
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <span className="section-label">ANALYTICS</span>
+                <h2>Interruption Sources</h2>
+              </div>
+            </div>
+
+            {contextSwitches.length > 0 ? (
+              <>
+                <div className="interruption-bars">
+                  {[
+                    {
+                      label: "Slack",
+                      value: contextSwitches.filter(
+                        (item) => item.to_source === "Slack"
+                      ).length,
+                    },
+                    {
+                      label: "Jira",
+                      value: contextSwitches.filter(
+                        (item) => item.to_source === "Jira"
+                      ).length,
+                    },
+                  ].map((item) => {
+                    const maxValue = Math.max(
+                      contextSwitches.filter(
+                        (event) => event.to_source === "Slack"
+                      ).length,
+                      contextSwitches.filter(
+                        (event) => event.to_source === "Jira"
+                      ).length,
+                      1
+                    );
+
+                    return (
+                      <div key={item.label} className="interruption-item">
+                        <div className="interruption-label">
+                          <span>{item.label}</span>
+                          <strong>{item.value} switches</strong>
+                        </div>
+
+                        <div className="interruption-track">
+                          <div
+                            className="interruption-fill"
+                            style={{
+                              width: `${(item.value / maxValue) * 100}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="context-switch-list">
+                  {contextSwitches.map((switchEvent, index) => (
+                    <div
+                      className="context-switch-item"
+                      key={`${switchEvent.timestamp}-${index}`}
+                    >
+                      <div>
                         <strong>
+                          {switchEvent.from_source} →{" "}
                           {switchEvent.to_source}
                         </strong>
+                        <span>{formatTime(switchEvent.timestamp)}</span>
                       </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="empty-state">
-                  No context switches detected.
-                </div>
-              )}
-            </section>
 
-            {/* UNINTERRUPTED FLOW BLOCKS */}
-            <section className="card flow-block-card">
-              <div className="card-header">
-                <div>
-                  <span className="section-label">
-                    DEEP WORK
-                  </span>
-
-                  <h2>Uninterrupted Flow Blocks</h2>
-                </div>
-
-                <span className="today-label">
-                  {flowBlocks.length} blocks
-                </span>
-              </div>
-
-              {flowBlocks.length > 0 ? (
-                <div className="context-switch-list">
-                  {flowBlocks.map((block) => (
-                    <div
-                      className="context-switch-row"
-                      key={`${block.developer_id}-${block.start_time}-${block.end_time}`}
-                    >
-                      <span className="time">
-                        {formatTime(block.start_time)}
+                      <span className="switch-duration">
+                        {switchEvent.duration_seconds ?? 0}s
                       </span>
-
-                      <span>
-                        {formatTime(block.end_time)}
-                      </span>
-
-                      <span>→</span>
-
-                      <strong>
-                        {block.duration_minutes} min
-                      </strong>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="empty-state">
-                  No uninterrupted 90+ minute flow blocks detected.
-                </div>
-              )}
-            </section>
-
-            {/* LOWER CARDS */}
-            <section className="dashboard-grid">
-                            {/* ACTIVITY RATIO */}
-              <div className="card">
-                <div className="card-header">
-                  <div>
-                    <span className="section-label">
-                      ANALYTICS
-                    </span>
-
-                    <h2>Activity Ratio Breakdown</h2>
-                  </div>
-                </div>
-
-                <div style={{ height: "260px", marginTop: "12px" }}>
-                  <BarChart
-                    data={[
-                      {
-                        type: "Coding",
-                        events: analytics.coding_events || 0,
-                      },
-                      {
-                        type: "Communication",
-                        events: analytics.communication_events || 0,
-                      },
-                      {
-                        type: "Productive",
-                        events: analytics.productive_events || 0,
-                      },
-                    ]}
-                    index="type"
-                    categories={["events"]}
-                    colors={["blue"]}
-                    valueFormatter={(value) => `${value} events`}
-                    showLegend={false}
-                    showGridLines={true}
-                    showAnimation={false}
-                    yAxisWidth={45}
-                  />
-                </div>
+              </>
+            ) : (
+              <div className="empty-state">
+                No context switches detected.
               </div>
-              {/* ACTIVITY */}
-              <div className="card">
-                <div className="card-header">
-                  <div>
-                    <span className="section-label">
-                      ACTIVITY
-                    </span>
+            )}
+          </div>
 
-                    <h2>Activity Distribution</h2>
-                  </div>
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <span className="section-label">FLOW</span>
+                <h2>Uninterrupted Flow Blocks</h2>
+              </div>
+            </div>
 
-                  <span className="event-count">
-                    {analytics.total_events}
-                  </span>
-                </div>
-
-                <div className="activity-content">
-                  <div className="donut">
-                    <div className="donut-inner">
+            {flowBlocks.length > 0 ? (
+              <div className="flow-block-list">
+                {flowBlocks.map((block, index) => (
+                  <div
+                    className="flow-block-item"
+                    key={`${block.start_time}-${index}`}
+                  >
+                    <div>
                       <strong>
-                        {analytics.total_events}
+                        {formatTime(block.start_time)} →{" "}
+                        {formatTime(block.end_time)}
                       </strong>
-
-                      <span>Events</span>
-                    </div>
-                  </div>
-
-                  <div className="source-list">
-                    {Object.entries(sourceCounts).map(
-                      ([source, count]) => (
-                        <div
-                          className="source-row"
-                          key={source}
-                        >
-                          <span className="source-dot">
-                            {source.charAt(0)}
-                          </span>
-
-                          <span>{source}</span>
-
-                          <strong>{count}</strong>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* EVENTS BY SOURCE */}
-              <div className="card">
-                <div className="card-header">
-                  <div>
-                    <span className="section-label">
-                      SOURCES
-                    </span>
-
-                    <h2>Events by Source</h2>
-                  </div>
-                </div>
-
-                <div className="bars">
-                  {Object.entries(sourceCounts).map(
-                    ([source, count]) => {
-                      const percentage =
-                        analytics.total_events > 0
-                          ? (count /
-                              analytics.total_events) *
-                            100
-                          : 0;
-
-                      return (
-                        <div
-                          className="bar-row"
-                          key={source}
-                        >
-                          <span>{source}</span>
-
-                          <div className="bar-track">
-                            <div
-                              className="bar"
-                              style={{
-                                width: `${percentage}%`,
-                              }}
-                            ></div>
-                          </div>
-
-                          <strong>{count}</strong>
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-              </div>
-
-              {/* PRODUCTIVITY */}
-              <div className="card productivity-card">
-                <div className="card-header">
-                  <div>
-                    <span className="section-label">
-                      PRODUCTIVITY
-                    </span>
-
-                    <h2>Session Health</h2>
-                  </div>
-
-                  <span className="health-badge">
-                    {cognitiveStatus(
-                      analytics.cognitive_load
-                    )}
-                  </span>
-                </div>
-
-                <div className="indicator">
-                  <div className="indicator-top">
-                    <span>Focus time</span>
-
-                    <strong>
-                      {analytics.focus_time_percent}%
-                    </strong>
-                  </div>
-
-                  <div className="indicator-track">
-                    <div
-                      className="indicator-fill"
-                      style={{
-                        width: `${analytics.focus_time_percent}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="indicator">
-                  <div className="indicator-top">
-                    <span>Deep work</span>
-
-                    <strong>
-                      {analytics.deep_work_percent}%
-                    </strong>
-                  </div>
-
-                  <div className="indicator-track">
-                    <div
-                      className="indicator-fill"
-                      style={{
-                        width: `${analytics.deep_work_percent}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="indicator">
-                  <div className="indicator-top">
-                    <span>Communication load</span>
-
-                    <strong>
-                      {
-                        analytics.communication_load_percent
-                      }
-                      %
-                    </strong>
-                  </div>
-
-                  <div className="indicator-track">
-                    <div
-                      className="indicator-fill"
-                      style={{
-                        width: `${analytics.communication_load_percent}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="indicator">
-                  <div className="indicator-top">
-                    <span>Cognitive load</span>
-
-                    <strong>
-                      {analytics.cognitive_load}%
-                    </strong>
-                  </div>
-
-                  <div className="indicator-track">
-                    <div
-                      className="indicator-fill"
-                      style={{
-                        width: `${analytics.cognitive_load}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* LIVE EVENTS */}
-            <section className="card events-card">
-              <div className="card-header">
-                <div>
-                  <span className="section-label">
-                    ACTIVITY STREAM
-                  </span>
-
-                  <h2>Live Activity</h2>
-                </div>
-
-                <span className="event-count">
-                  {events.length} events
-                </span>
-              </div>
-
-              <div className="table">
-                <div className="table-head">
-                  <span>TIME</span>
-                  <span>SOURCE</span>
-                  <span>EVENT</span>
-                  <span>STATUS</span>
-                </div>
-
-                {events.map((event) => {
-                  const status = getEventStatus(event);
-
-                  return (
-                    <div
-                      className="table-row"
-                      key={`${event.timestamp}-${event.source}-${event.event_type}`}
-                    >
-                      <span className="time">
-                        {formatTime(event.timestamp)}
-                      </span>
-
-                      <span className="source-name">
-                        <span className="event-icon">
-                          {event.source.charAt(0)}
-                        </span>
-
-                        {event.source}
-                      </span>
-
                       <span>
-                        {event.event_type}
-                      </span>
-
-                      <span
-                        className={`status ${status.className}`}
-                      >
-                        {status.label}
+                        {block.duration_minutes ?? 0} min uninterrupted
                       </span>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
-            </section>
-          </>
-        )}
+            ) : (
+              <div className="empty-state">
+                No uninterrupted flow blocks detected.
+              </div>
+            )}
+          </div>
 
-        <footer>
-          <span>
-            CogniStream • Developer Flow & Cognitive
-            Load Analytics
-          </span>
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <span className="section-label">ANALYTICS</span>
+                <h2>Activity Ratio Breakdown</h2>
+              </div>
+            </div>
 
-          <span>
-            Pipeline: Python → Polars → ClickHouse →
-            FastAPI → React
-          </span>
-        </footer>
+            <div className="activity-ratio-list">
+              {[
+                {
+                  label: "Coding",
+                  value: analytics?.coding_events || 0,
+                },
+                {
+                  label: "Communication",
+                  value: analytics?.communication_events || 0,
+                },
+                {
+                  label: "Productive",
+                  value: analytics?.productive_events || 0,
+                },
+              ].map((item) => {
+                const totalEvents = analytics?.total_events || events.length || 0;
+                const percentage =
+                  totalEvents > 0
+                    ? Math.round((item.value / totalEvents) * 100)
+                    : 0;
+
+                return (
+                  <div key={item.label} className="activity-ratio-item">
+                    <div className="activity-ratio-label">
+                      <span>{item.label}</span>
+                      <strong>
+                        {item.value} events · {percentage}%
+                      </strong>
+                    </div>
+
+                    <div className="activity-ratio-track">
+                      <div
+                        className="activity-ratio-fill"
+                        style={{
+                          width: `${percentage}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="dashboard-grid">
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <span className="section-label">ACTIVITY</span>
+                <h2>Activity Distribution</h2>
+              </div>
+            </div>
+
+            <div className="stats-list">
+              <div className="stats-row">
+                <span>Coding</span>
+                <strong>{analytics?.coding_events ?? 0}</strong>
+              </div>
+
+              <div className="stats-row">
+                <span>Communication</span>
+                <strong>{analytics?.communication_events ?? 0}</strong>
+              </div>
+
+              <div className="stats-row">
+                <span>Productive</span>
+                <strong>{analytics?.productive_events ?? 0}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <span className="section-label">SOURCES</span>
+                <h2>Events by Source</h2>
+              </div>
+            </div>
+
+            <div className="stats-list">
+              {Object.entries(sourceCounts).map(([source, count]) => (
+                <div className="stats-row" key={source}>
+                  <span>{source}</span>
+                  <strong>{count}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <span className="section-label">HEALTH</span>
+                <h2>Session Health</h2>
+              </div>
+            </div>
+
+            <div className="stats-list">
+              <div className="stats-row">
+                <span>Focus Time</span>
+                <strong>{analytics?.focus_time_percent ?? 0}%</strong>
+              </div>
+
+              <div className="stats-row">
+                <span>Deep Work</span>
+                <strong>{analytics?.deep_work_percent ?? 0}%</strong>
+              </div>
+
+              <div className="stats-row">
+                <span>Communication Load</span>
+                <strong>
+                  {analytics?.communication_load_percent ?? 0}%
+                </strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="card recent-events-card">
+          <div className="card-header">
+            <div>
+              <span className="section-label">LIVE ACTIVITY</span>
+              <h2>Recent Events</h2>
+            </div>
+          </div>
+
+          <div className="activity-table">
+            <div className="activity-table-header">
+              <span>Time</span>
+              <span>Source</span>
+              <span>Event</span>
+              <span>Status</span>
+            </div>
+
+            {events.length > 0 ? (
+              [...events]
+                .sort(
+                  (a, b) =>
+                    new Date(b.timestamp) - new Date(a.timestamp)
+                )
+                .map((event, index) => (
+                  <div
+                    className="activity-table-row"
+                    key={`${event.timestamp}-${index}`}
+                  >
+                    <span>{formatTime(event.timestamp)}</span>
+                    <span>{event.source || "Unknown"}</span>
+                    <span>{event.event_type || "Activity"}</span>
+                    <span className="status-badge">
+                      {getEventStatus(event)}
+                    </span>
+                  </div>
+                ))
+            ) : (
+              <div className="empty-state">No activity available.</div>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

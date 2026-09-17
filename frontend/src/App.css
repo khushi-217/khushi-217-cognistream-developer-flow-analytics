@@ -1317,3 +1317,255 @@ main > footer span {
   color: #64748b !important;
   font-size: 10px !important;
 }
+/* =========================================================
+   COGNISTREAM — FINAL DASHBOARD POLISH
+   ========================================================= */
+
+/* Flow chart scale and time labels */
+
+.flow-card .chart-area {
+  position: relative;
+  padding-left: 34px;
+  padding-bottom: 25px;
+  overflow: visible;
+}
+
+.flow-card .chart {
+  height: 220px;
+  min-height: 220px;
+}
+
+.flow-scale {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 28px;
+  width: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.flow-time-labels {
+  position: absolute;
+  left: 34px;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+  overflow: hidden;
+}
+
+.flow-time-labels span {
+  white-space: nowrap;
+}
+
+/* Interruption source bars */
+
+.interruption-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.interruption-item {
+  width: 100%;
+}
+
+.interruption-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 7px;
+  font-size: 12px;
+}
+
+.interruption-label span {
+  color: #4b5563;
+}
+
+.interruption-label strong {
+  color: #111827;
+  font-size: 11px;
+}
+
+.interruption-track {
+  width: 100%;
+  height: 12px;
+  background: #edf0f4;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.interruption-fill {
+  height: 100%;
+  min-width: 0;
+  background: var(--blue);
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+/* Activity ratio breakdown */
+
+.activity-ratio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.activity-ratio-item {
+  width: 100%;
+}
+
+.activity-ratio-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 7px;
+  font-size: 12px;
+}
+
+.activity-ratio-label span {
+  color: #4b5563;
+}
+
+.activity-ratio-label strong {
+  color: #111827;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.activity-ratio-track {
+  width: 100%;
+  height: 12px;
+  background: #edf0f4;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.activity-ratio-fill {
+  height: 100%;
+  min-width: 0;
+  background: var(--blue);
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+/* Recent events — actual JSX uses div/grid, not table elements */
+
+.recent-events-card {
+  overflow: hidden;
+}
+
+.recent-events-card .activity-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.recent-events-card .activity-table-header,
+.recent-events-card .activity-table-row {
+  display: grid;
+  grid-template-columns: 90px 120px minmax(180px, 1fr) 120px;
+  align-items: center;
+  column-gap: 20px;
+  width: 100%;
+  padding: 0 22px;
+}
+
+.recent-events-card .activity-table-header {
+  min-height: 42px;
+  background: #fafbfc;
+  border-top: 1px solid #edf0f4;
+  border-bottom: 1px solid #edf0f4;
+  color: #8a93a3;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.recent-events-card .activity-table-row {
+  min-height: 55px;
+  border-bottom: 1px solid #f0f2f5;
+  color: #374151;
+  font-size: 11px;
+}
+
+.recent-events-card .activity-table-row:last-child {
+  border-bottom: 0;
+}
+
+.recent-events-card .activity-table-row:hover {
+  background: #fafcff;
+}
+
+.recent-events-card .activity-table-row > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-events-card .activity-table-row > span:first-child {
+  color: #4b5563;
+  font-weight: 650;
+}
+
+.recent-events-card .activity-table-row > span:nth-child(2) {
+  color: #111827;
+  font-weight: 650;
+}
+
+.recent-events-card .activity-table-row > span:nth-child(3) {
+  color: #4b5563;
+}
+
+.recent-events-card .status-badge {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: #15803d;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Responsive recent events */
+
+@media (max-width: 800px) {
+  .recent-events-card {
+    overflow-x: auto;
+  }
+
+  .recent-events-card .activity-table {
+    min-width: 620px;
+  }
+
+  .flow-card .chart-area {
+    padding-left: 30px;
+  }
+
+  .flow-time-labels {
+    left: 30px;
+  }
+}
