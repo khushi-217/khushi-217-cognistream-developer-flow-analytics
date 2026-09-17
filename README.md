@@ -415,6 +415,9 @@ The final dashboard brings together developer productivity and developer-frictio
 * Recent Activity
 * Live Activity
 
+### 🖥️ Final Dashboard Preview
+
+![CogniStream Final Dashboard](screenshots/final-dashboard.png)
 ---
 
 # 🔗 Backend → Frontend Integration
@@ -519,8 +522,9 @@ The CI workflow validates the project automatically during repository changes.
 ---
 
 # 📁 Project Structure
-
 ```text
+
+
 CogniStream/
 │
 ├── .github/
@@ -563,6 +567,9 @@ CogniStream/
 ├── ide_activity.py
 ├── event_ingestion.py
 ├── test_ingestion.py
+├── jira_api.py
+├── normalize_events.py
+├── validate_data.py
 │
 ├── events.json
 ├── events_normalized.json
@@ -570,7 +577,8 @@ CogniStream/
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
-```
+
+
 
 ---
 
@@ -688,3 +696,17 @@ CogniStream Analytics Dashboard
 B.Tech Computer Science Engineering
 
 GitHub: `khushi-217`
+
+### Latest Verification Results
+
+The current implementation was re-validated locally with the following checks:
+
+- Python tests: **10 passed**
+- Frontend lint: **0 warnings, 0 errors**
+- Frontend production build: **successful**
+- FastAPI analytics endpoint (`/api/analytics/summary`): **verified successfully**
+- Git working tree: **clean and synchronized with `origin/khushi-ingestion`**
+
+These checks confirm that the backend analytics, frontend code quality, production build, and API integration are functioning as expected.
+
+---
